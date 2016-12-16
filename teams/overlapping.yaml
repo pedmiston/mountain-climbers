@@ -1,0 +1,8 @@
+---
+
+player_a:
+  vision_x: 6
+  vision_y: 4
+player_b:
+  vision_x: 4
+  vision_y: 6
