@@ -1,0 +1,13 @@
+---
+title: "Mountain Climbers"
+---
+
+```{r, include=FALSE}
+library(tidyverse)
+```
+
+```{r}
+results <- read_csv("first_results.csv")
+ggplot(results, aes(time, fitness, color = team_name)) +
+  geom_line()
+```

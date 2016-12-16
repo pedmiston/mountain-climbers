@@ -1,10 +1,13 @@
 from invoke import task
+import yaml
 import peaks
 
 
 @task
-def simulate(ctx, team_config=None, landscape_config=None):
-    team = peaks.create_team(team_config)
-    landscape = peaks.create_landscape(landscape_config)
-    sim = peaks.Simulation(landscape, team)
+def simulate(ctx):
+    teams = yaml.load(open('teams.yaml'))
+    for team_name, player_attributes in teams.items():
+        teams[team_name] = peaks.Team.from_player_attributes(*player_attributes)
+    landscape = peaks.landscapes.SimpleHill()
+    sim = peaks.Simulation(landscape, teams)
     sim.run()
