@@ -7,7 +7,8 @@ library(tidyverse)
 ```
 
 ```{r}
-results <- read_csv("first_results.csv")
+results <- read_csv("second_results.csv")
 ggplot(results, aes(time, fitness, color = team_name)) +
-  geom_line()
+  geom_line() +
+  facet_wrap("condition")
 ```
