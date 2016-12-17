@@ -27,10 +27,10 @@ class Team:
 
 
 class Player:
-    def __init__(self, vision_x, vision_y, seed=None):
+    def __init__(self, vision_x, vision_y):
         self.sight_x = Player.vision_to_sight(vision_x)
         self.sight_y = Player.vision_to_sight(vision_y)
-        self._pick_one = partial(numpy.random.RandomState(seed).choice, size=1)
+        self.set_seed()
 
     @staticmethod
     def vision_to_sight(vision):
@@ -40,6 +40,9 @@ class Player:
         sight is [-2, -1, 0, 1, 2].
         """
         return range(-vision, vision+1)
+
+    def set_seed(self, seed=None):
+        self._pick_one = partial(numpy.random.RandomState(seed).choice, size=1)
 
     def pick_one(self, values):
         return self._pick_one(values)[0]

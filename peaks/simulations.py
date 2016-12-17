@@ -1,22 +1,24 @@
 
-class Simulation:
-    start_pos = (-100, -100)
-    labor_hours = 100
+def simulations(landscape, teams, strategies, labor_hours=100, n_seeds=100):
+    for strategy in strategies:
+        for name, team in teams:
+            for seed in range(n_seeds):
+                simulate(landscape, team, strategy, seed, labor_hours, n_seeds)
 
-    def __init__(self, landscape, teams):
-        self.landscape = landscape
-        self.teams = teams
 
-    def run_team(self, name, condition, t0=0):
-        team = self.teams[name]
-        fitness = self.landscape.evaluate(team.pos)
-        for t in range(t0, t0+self.labor_hours):
-            new_pos = team.new_pos()
-            new_fitness = self.landscape.evaluate(new_pos)
-            if new_fitness > fitness:
-                team.pos = new_pos
-                fitness = new_fitness
-            print('{},{},{},{}'.format(name, condition, t, fitness))
+def simulate(landscape, team, strategy, seed,
+             labor_hours, n_seeds, starting_pos):
+    team.pos = starting_pos
+    team.set_seed(seed)
+    fitness = landscape.evaluate(team.pos)
+    
+    for calendar_hour in strategy.spend_labor_hours(labor_hours):
+        new_pos = team.new_pos()
+        new_fitness = landscape.evaluate(new_pos)
+        if new_fitness > fitness:
+            team.pos = new_pos
+            fitness = new_fitness
+        print('{},{},{},{}'.format(name, condition, t, fitness))
 
 
 class Synchronic(Simulation):

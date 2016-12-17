@@ -9,6 +9,10 @@ def simulate(ctx):
     for team_name, player_attributes in teams.items():
         teams[team_name] = peaks.Team.from_player_attributes(*player_attributes)
     landscape = peaks.landscapes.SimpleHill()
-    print('team_name,condition,time,fitness')
-    peaks.simulations.Synchronic(landscape, teams).run()
-    peaks.simulations.Diachronic(landscape, teams).run()
+    print('team_name,condition,time,fitness')  # csv header
+    peaks.Simulation(landscape, teams, strategies).run()
+
+@task
+def report(ctx):
+    Rscript = "rmarkdown::render('report.Rmd')"
+    ctx.run('Rscript -e "{}"'.format(Rscript))
