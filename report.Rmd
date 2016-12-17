@@ -3,7 +3,15 @@ title: "Mountain Climbers"
 ---
 
 ```{r, include=FALSE}
+library(knitr)
+opts_chunk$set(echo=FALSE)
+
 library(tidyverse)
+library(crotchet)
+read_graphviz_chunk("team-structures", "evoteams")
+```
+
+```{r team-structures, engine="dot", fig.width=2}
 ```
 
 ```{r}
