@@ -1,17 +1,13 @@
+import sys
 from invoke import task
 import yaml
 import peaks
 
 
 @task
-def simulate(ctx):
-    teams = yaml.load(open('teams.yaml'))
-    for team_name, player_attributes in teams.items():
-        teams[team_name] = peaks.Team.from_player_attributes(*player_attributes)
-    landscape = peaks.landscapes.SimpleHill()
-    strategies = [peaks.strategies.synchronic, peaks.strategies.diachronic]
-    peaks.run_experiment(landscape, teams, strategies,
-                         labor_hours=50, n_seeds=100) 
+def simulate(ctx, experiment_yaml, output=None):
+    peaks.run_experiment(experiment_yaml, output=output)
+
 
 @task
 def report(ctx, open_after=False):

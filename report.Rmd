@@ -15,8 +15,9 @@ read_graphviz_chunk("team-structures", "evoteams")
 ```
 
 ```{r}
-results <- read_csv("results.csv")
-ggplot(results, aes(calendar_hour, fitness, color = team_name)) +
+results <- read_csv("experiment-1.csv")
+ggplot(results, aes(time, fitness, color = team)) +
   geom_line(stat = "summary", fun.y = "mean") +
-  facet_wrap("strategy_name")
+  scale_color_manual(labels = letters[1:5], values = RColorBrewer::brewer.pal(5, "Blues")) +
+  facet_wrap("strategy")
 ```

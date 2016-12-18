@@ -1,5 +1,6 @@
 from functools import partial
 import numpy
+import json
 
 
 class Team:
@@ -17,8 +18,8 @@ class Team:
     def new_pos(self):
         """Generate a new position from current position and player deltas."""
         deltas = [player.delta() for player in self.active_players]
-        mean_delta = numpy.array(deltas).mean(axis=0)
-        new_pos = numpy.array([self.pos, mean_delta]).sum(axis=0)
+        total_delta = numpy.array(deltas).sum(axis=0)
+        new_pos = numpy.array([self.pos, total_delta]).sum(axis=0)
         return new_pos
 
     def set_seed(self, seed):
@@ -27,9 +28,14 @@ class Team:
         for ix, s in enumerate(player_seeds):
             self.players[ix].set_seed(s)
 
+    def __str__(self):
+        return json.dumps([player.to_dict() for player in self.players])
+
 
 class Player:
     def __init__(self, vision_x, vision_y):
+        self.vision_x = vision_x
+        self.vision_y = vision_y
         self.sight_x = Player.vision_to_sight(vision_x)
         self.sight_y = Player.vision_to_sight(vision_y)
         self.set_seed()
@@ -52,3 +58,9 @@ class Player:
     def delta(self):
         """Return a delta that this player can impact on a team's position."""
         return (self.pick_one(self.sight_x), self.pick_one(self.sight_y))
+
+    def to_dict(self):
+        return dict(vision_x=self.vision_x, vision_y=self.vision_y)
+
+    def __str__(self):
+        return json.dumps(self.to_dict())
