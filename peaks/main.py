@@ -1,4 +1,5 @@
 from sys import stdout
+import json
 import pandas
 
 from .config import Experiment
@@ -23,7 +24,7 @@ def simulate(team, landscape, strategy, labor_hours, starting_pos, seed):
 
     WARNING! simulate is expected to have the same call signature as SIM_VARS.
     """
-    team.pos = starting_pos
+    team.pos = list(starting_pos)
     team.set_seed(seed)
     fitness = landscape.evaluate(team.pos)
 
@@ -44,7 +45,7 @@ def simulate(team, landscape, strategy, labor_hours, starting_pos, seed):
             starting_pos=starting_pos,
             seed=seed,
             time=calendar_hour,
-            pos=team.pos,
+            pos=json.dumps(team.pos),
             fitness=fitness,
         ))
 

@@ -21,7 +21,7 @@ class Team:
         deltas = [player.delta() for player in self.active_players]
         total_delta = numpy.array(deltas).sum(axis=0)
         new_pos = numpy.array([self.pos, total_delta]).sum(axis=0)
-        return new_pos
+        return new_pos.tolist()
 
     def set_seed(self, seed):
         rand = numpy.random.RandomState(seed)

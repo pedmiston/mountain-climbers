@@ -56,3 +56,31 @@ ggplot(results, aes(time, fitness_pct, color = team_label)) +
          color = guide_legend(order = 2)) +
   theme_minimal()
 ```
+
+```{r}
+extract_position <- function(frame) {
+  pos <- map(frame$pos, jsonlite::fromJSON)
+  get_coord <- function(n) {
+    map(pos, function(x) x[[n]]) %>%
+      unlist()
+  }
+  frame$pos_x <- get_coord(1)
+  frame$pos_y <- get_coord(2)
+  frame
+}
+
+results %<>%
+  extract_position() %>%
+  mutate(sim_id = paste(team_id, strategy, seed, sep = ":"))
+
+sample_sim_ids <- results %>%
+  group_by(strategy) %>%
+  filter(team_id == "a") %>%
+  sample_n(10) %>%
+  .$sim_id
+
+ggplot(results %>% filter(sim_id %in% sample_sim_ids)) +
+  aes(pos_x, pos_y, group = sim_id) +
+  geom_line(aes(color = strategy)) +
+  coord_equal()
+```
