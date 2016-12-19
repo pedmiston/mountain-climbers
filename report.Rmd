@@ -4,22 +4,81 @@ title: "Mountain Climbers"
 
 ```{r, include=FALSE}
 library(knitr)
-opts_chunk$set(echo=FALSE, message=FALSE, fig.align="center")
+opts_chunk$set(echo=FALSE, message=FALSE)
 
 library(tidyverse)
 library(magrittr)
 library(crotchet)
 read_graphviz_chunk("team-structures", "evoteams")
+
+recode_fitness_as_pct <- function(frame) {
+  frame %>%
+    mutate(fitness_pct = 1 - fitness/min(fitness))
+}
+
+extract_position <- function(frame) {
+  pos <- map(frame$pos, jsonlite::fromJSON)
+  get_coord <- function(n) {
+    map(pos, function(x) x[[n]]) %>%
+      unlist()
+  }
+  frame$pos_x <- get_coord(1)
+  frame$pos_y <- get_coord(2)
+  frame
+}
+
+base_theme <- theme_minimal()
+scale_color_strategy <- scale_color_manual(
+  "Strategy",
+  values = RColorBrewer::brewer.pal(3, "Set2")[c(1,3)]
+)
 ```
 
 ```{r team-structures, engine="dot", fig.width=2}
 ```
 
-```{r}
-results <- read_csv("experiment-1.csv") %>%
-  mutate(fitness_pct = 1 - fitness/min(fitness))
+# Experiment 1
 
-teams <- unique(results$team) %>%
+```{r}
+experiment_1 <- read_csv("experiment-1.csv") %>%
+  recode_fitness_as_pct()
+
+ggplot(experiment_1, aes(time, fitness_pct, color = strategy)) +
+  geom_line(stat = "summary", fun.y = "mean") +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_strategy +
+  base_theme
+```
+
+```{r}
+experiment_1 %<>%
+  extract_position() %>%
+  mutate(sim_id = paste(strategy, seed, sep = ":"))
+
+sample_sim_ids <- experiment_1 %>%
+  group_by(strategy) %>%
+  sample_n(5) %>%
+  .$sim_id
+
+ggplot(experiment_1 %>% filter(sim_id %in% sample_sim_ids)) +
+  aes(pos_x, pos_y, group = sim_id, color = strategy) +
+  geom_point(size = 0.5) +
+  geom_line() +
+  coord_equal() +
+  facet_wrap("strategy") +
+  scale_color_strategy +
+  base_theme +
+  theme(legend.position = "none")
+```
+
+# Experiment 2
+
+```{r}
+experiment_2 <- read_csv("experiment-2.csv") %>%
+  recode_fitness_as_pct()
+
+teams <- unique(experiment_2$team) %>%
   map(function(team) {
     data <- jsonlite::fromJSON(team)
     data$players %>%
@@ -44,9 +103,10 @@ team_map <- teams %>%
   unique() %>%
   mutate(team_label = factor(team_id, levels = team_levels))
 
-results %<>% left_join(team_map)
+experiment_2 %<>%
+  left_join(team_map)
 
-ggplot(results, aes(time, fitness_pct, color = team_label)) +
+ggplot(experiment_2, aes(time, fitness_pct, color = team_label)) +
   geom_line(aes(lty = strategy), stat = "summary", fun.y = "mean") +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
@@ -54,33 +114,5 @@ ggplot(results, aes(time, fitness_pct, color = team_label)) +
   scale_color_team_label +
   guides(lty = guide_legend(order = 1),
          color = guide_legend(order = 2)) +
-  theme_minimal()
-```
-
-```{r}
-extract_position <- function(frame) {
-  pos <- map(frame$pos, jsonlite::fromJSON)
-  get_coord <- function(n) {
-    map(pos, function(x) x[[n]]) %>%
-      unlist()
-  }
-  frame$pos_x <- get_coord(1)
-  frame$pos_y <- get_coord(2)
-  frame
-}
-
-results %<>%
-  extract_position() %>%
-  mutate(sim_id = paste(team_id, strategy, seed, sep = ":"))
-
-sample_sim_ids <- results %>%
-  group_by(strategy) %>%
-  filter(team_id == "a") %>%
-  sample_n(10) %>%
-  .$sim_id
-
-ggplot(results %>% filter(sim_id %in% sample_sim_ids)) +
-  aes(pos_x, pos_y, group = sim_id) +
-  geom_line(aes(color = strategy)) +
-  coord_equal()
+  base_theme
 ```
