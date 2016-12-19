@@ -49,7 +49,8 @@ class Experiment:
         """Return a list of Teams created from Player attributes."""
         teams = []
         for name, player_attributes in self._data['teams'].items():
-            teams.append(Team.from_player_attributes(*player_attributes))
+            teams.append(Team.from_player_attributes(*player_attributes,
+                                                     name=name))
         return teams
 
     def simulations(self, ordered_properties):
@@ -62,4 +63,3 @@ class Experiment:
         if not isinstance(data, list):
             data = [data]
         return data
-

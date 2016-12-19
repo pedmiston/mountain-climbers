@@ -4,16 +4,17 @@ import json
 
 
 class Team:
-    def __init__(self, players):
+    def __init__(self, players, name='unnamed'):
+        self.name = name
         self.players = players
         self.active_players = players
         self.pos = (0, 0)
 
     @classmethod
-    def from_player_attributes(cls, *player_attributes):
+    def from_player_attributes(cls, *player_attributes, name=None):
         """Create players before adding them to a team."""
         players = [Player(**attributes) for attributes in player_attributes]
-        return cls(players)
+        return cls(players, name=name)
 
     def new_pos(self):
         """Generate a new position from current position and player deltas."""
@@ -29,7 +30,10 @@ class Team:
             self.players[ix].set_seed(s)
 
     def __str__(self):
-        return json.dumps([player.to_dict() for player in self.players])
+        return json.dumps(dict(
+            name=self.name,
+            players=[player.to_dict() for player in self.players]
+        ))
 
 
 class Player:

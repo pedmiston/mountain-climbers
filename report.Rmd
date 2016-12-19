@@ -4,9 +4,10 @@ title: "Mountain Climbers"
 
 ```{r, include=FALSE}
 library(knitr)
-opts_chunk$set(echo=FALSE)
+opts_chunk$set(echo=FALSE, message=FALSE, fig.align="center")
 
 library(tidyverse)
+library(magrittr)
 library(crotchet)
 read_graphviz_chunk("team-structures", "evoteams")
 ```
@@ -15,9 +16,43 @@ read_graphviz_chunk("team-structures", "evoteams")
 ```
 
 ```{r}
-results <- read_csv("experiment-1.csv")
-ggplot(results, aes(time, fitness, color = team)) +
-  geom_line(stat = "summary", fun.y = "mean") +
-  scale_color_manual(labels = letters[1:5], values = RColorBrewer::brewer.pal(5, "Blues")) +
-  facet_wrap("strategy")
+results <- read_csv("experiment-1.csv") %>%
+  mutate(fitness_pct = 1 - fitness/min(fitness))
+
+teams <- unique(results$team) %>%
+  map(function(team) {
+    data <- jsonlite::fromJSON(team)
+    data$players %>%
+      mutate(
+        player = 1:n(),
+        team_id = data$name,
+        team = team
+      )
+  }) %>%
+  bind_rows()
+
+scale_color_team_label <- scale_color_manual(
+    "skill overlap",
+    labels = c("4 disjoint", "3", "2 overlapping", "1", "0 identical"),
+    values = RColorBrewer::brewer.pal(7, "BuGn")[7:3]
+  )
+
+# Order teams from most disjoint to least
+team_levels <- letters[5:1]
+team_map <- teams %>%
+  select(team, team_id) %>%
+  unique() %>%
+  mutate(team_label = factor(team_id, levels = team_levels))
+
+results %<>% left_join(team_map)
+
+ggplot(results, aes(time, fitness_pct, color = team_label)) +
+  geom_line(aes(lty = strategy), stat = "summary", fun.y = "mean") +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_linetype_manual(values = c("solid", "longdash")) +
+  scale_color_team_label +
+  guides(lty = guide_legend(order = 1),
+         color = guide_legend(order = 2)) +
+  theme_minimal()
 ```
