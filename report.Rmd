@@ -10,10 +10,11 @@ library(tidyverse)
 library(magrittr)
 library(crotchet)
 read_graphviz_chunk("team-structures", "evoteams")
+```
 
+```{r helper-functions, include=FALSE}
 recode_fitness_as_pct <- function(frame) {
-  frame %>%
-    mutate(fitness_pct = 1 - fitness/min(fitness))
+  mutate(frame, fitness_pct = 1 - fitness/min(fitness))
 }
 
 extract_position <- function(frame) {
@@ -27,10 +28,48 @@ extract_position <- function(frame) {
   frame
 }
 
+recode_team <- function(frame) {
+  teams <- unique(frame$team) %>%
+    map(function(team) {
+      data <- jsonlite::fromJSON(team)
+      data$players %>%
+        mutate(
+          player = 1:n(),
+          team_id = data$name,
+          team = team
+        )
+    }) %>%
+    bind_rows()
+
+  # Order teams from most disjoint to least
+  team_levels <- letters[5:1]
+  team_map <- teams %>%
+    select(team, team_id) %>%
+    unique() %>%
+    arrange(team_id) %>%
+    mutate(team_label = factor(team_id, levels = team_levels))
+  
+  left_join(frame, team_map)
+}
+```
+
+```{r theme, include=FALSE}
+library(RColorBrewer)
 base_theme <- theme_minimal()
+
+theme_colors <- brewer.pal(4, "Set2")
+names(theme_colors) <- c("blue", "orange", "green", "pink")
+get_theme_color_values <- function(names) theme_colors[names] %>% unname()
+
 scale_color_strategy <- scale_color_manual(
-  "Strategy",
-  values = RColorBrewer::brewer.pal(3, "Set2")[c(1,3)]
+  "strategy",
+  values = get_theme_color_values(c("green", "blue"))
+)
+
+scale_color_team_label <- scale_color_manual(
+  "skill overlap",
+  labels = c("4 disjoint", "3", "2 overlapping", "1", "0 identical"),
+  values = brewer.pal(7, "BuGn")[7:3]
 )
 ```
 
@@ -43,7 +82,8 @@ scale_color_strategy <- scale_color_manual(
 experiment_1 <- read_csv("experiment-1.csv") %>%
   recode_fitness_as_pct()
 
-ggplot(experiment_1, aes(time, fitness_pct, color = strategy)) +
+ggplot(experiment_1) +
+  aes(time, fitness_pct, color = strategy) +
   geom_line(stat = "summary", fun.y = "mean") +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
@@ -76,43 +116,32 @@ ggplot(experiment_1 %>% filter(sim_id %in% sample_sim_ids)) +
 
 ```{r}
 experiment_2 <- read_csv("experiment-2.csv") %>%
-  recode_fitness_as_pct()
+  recode_fitness_as_pct() %>%
+  recode_team()
 
-teams <- unique(experiment_2$team) %>%
-  map(function(team) {
-    data <- jsonlite::fromJSON(team)
-    data$players %>%
-      mutate(
-        player = 1:n(),
-        team_id = data$name,
-        team = team
-      )
-  }) %>%
-  bind_rows()
-
-scale_color_team_label <- scale_color_manual(
-    "skill overlap",
-    labels = c("4 disjoint", "3", "2 overlapping", "1", "0 identical"),
-    values = RColorBrewer::brewer.pal(7, "BuGn")[7:3]
-  )
-
-# Order teams from most disjoint to least
-team_levels <- letters[5:1]
-team_map <- teams %>%
-  select(team, team_id) %>%
-  unique() %>%
-  mutate(team_label = factor(team_id, levels = team_levels))
-
-experiment_2 %<>%
-  left_join(team_map)
-
-ggplot(experiment_2, aes(time, fitness_pct, color = team_label)) +
-  geom_line(aes(lty = strategy), stat = "summary", fun.y = "mean") +
+ggplot(experiment_2) +
+  aes(time, fitness_pct, color = team_label, lty = strategy) +
+  geom_line(stat = "summary", fun.y = "mean") +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
   scale_linetype_manual(values = c("solid", "longdash")) +
   scale_color_team_label +
   guides(lty = guide_legend(order = 1),
          color = guide_legend(order = 2)) +
+  base_theme
+```
+
+# Experiment 3
+
+```{r}
+experiment_3 <- read_csv("experiment-3.csv") %>%
+  recode_fitness_as_pct()
+
+ggplot(experiment_3) +
+  aes(time, fitness_pct, color = strategy) +
+  geom_line(stat = "summary", fun.y = "mean") +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_strategy +
   base_theme
 ```

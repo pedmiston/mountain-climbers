@@ -13,3 +13,11 @@ def diachronic(labor_hours, team):
         # Calculate calendar hours based on current player index
         for calendar_hour in range(i*labor_hours, i*labor_hours+labor_hours):
             yield calendar_hour
+
+def alternating(labor_hours, team):
+    """Have players take turns."""
+    total_hours = labor_hours * len(team.players)
+    for calendar_hour in range(total_hours):
+        ix = calendar_hour % len(team.players)
+        team.active_players = [team.players[ix]]
+        yield calendar_hour
