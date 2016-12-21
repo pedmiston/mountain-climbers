@@ -1,12 +1,27 @@
 import sys
-from invoke import task
+
 import yaml
+from invoke import task
+from unipath import Path
+
 import peaks
 
 
 @task
-def simulate(ctx, experiment_yaml, output=None):
-    peaks.run_experiment(experiment_yaml, output=output)
+def simulate(ctx, experiment):
+    if experiment == '*':
+        experiments = Path('experiments').listdir('*.yaml')
+    elif Path(experiment).exists():
+        experiments = [Path(experiment)]
+    else:
+        experiment = Path('experiments', experiment + '.yaml')
+        assert experiment.exists(), 'experiment %s not found' % experiment
+        experiments = [experiment]
+
+    for experiment in experiments:
+        output = Path('experiments', experiment.stem + '.csv')
+        print('running experiment %s' % experiment.stem)
+        peaks.run_experiment(experiment, output=output)
 
 
 @task

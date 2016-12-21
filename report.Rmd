@@ -13,6 +13,12 @@ read_graphviz_chunk("team-structures", "evoteams")
 ```
 
 ```{r helper-functions, include=FALSE}
+get_experiment_data <- function(experiment) {
+  file.path("experiments", paste0(experiment, ".csv")) %>%
+    read_csv() %>%
+    recode_fitness_as_pct()
+}
+
 recode_fitness_as_pct <- function(frame) {
   mutate(frame, fitness_pct = 1 - fitness/min(fitness))
 }
@@ -76,13 +82,12 @@ scale_color_team_label <- scale_color_manual(
 ```{r team-structures, engine="dot", fig.width=2}
 ```
 
-# Experiment 1
+# Identical team
 
 ```{r}
-experiment_1 <- read_csv("experiment-1.csv") %>%
-  recode_fitness_as_pct()
+identical_team <- get_experiment_data("identical-team")
 
-ggplot(experiment_1) +
+ggplot(identical_team) +
   aes(time, fitness_pct, color = strategy) +
   geom_line(stat = "summary", fun.y = "mean") +
   scale_x_continuous("calendar hours") +
@@ -92,16 +97,16 @@ ggplot(experiment_1) +
 ```
 
 ```{r}
-experiment_1 %<>%
+identical_team %<>%
   extract_position() %>%
   mutate(sim_id = paste(strategy, seed, sep = ":"))
 
-sample_sim_ids <- experiment_1 %>%
+sample_sim_ids <- identical_team %>%
   group_by(strategy) %>%
   sample_n(5) %>%
   .$sim_id
 
-ggplot(experiment_1 %>% filter(sim_id %in% sample_sim_ids)) +
+ggplot(identical_team %>% filter(sim_id %in% sample_sim_ids)) +
   aes(pos_x, pos_y, group = sim_id, color = strategy) +
   geom_point(size = 0.5) +
   geom_line() +
@@ -112,14 +117,13 @@ ggplot(experiment_1 %>% filter(sim_id %in% sample_sim_ids)) +
   theme(legend.position = "none")
 ```
 
-# Experiment 2
+# Differing skills
 
 ```{r}
-experiment_2 <- read_csv("experiment-2.csv") %>%
-  recode_fitness_as_pct() %>%
+differing_skills <- get_experiment_data("differing-skills") %>%
   recode_team()
 
-ggplot(experiment_2) +
+ggplot(differing_skills) +
   aes(time, fitness_pct, color = team_label, lty = strategy) +
   geom_line(stat = "summary", fun.y = "mean") +
   scale_x_continuous("calendar hours") +
@@ -131,13 +135,12 @@ ggplot(experiment_2) +
   base_theme
 ```
 
-# Experiment 3
+# Rate of alternation
 
 ```{r}
-experiment_3 <- read_csv("experiment-3.csv") %>%
-  recode_fitness_as_pct()
+alternating <- get_experiment_data("alternating")
 
-ggplot(experiment_3) +
+ggplot(alternating) +
   aes(time, fitness_pct, color = strategy) +
   geom_line(stat = "summary", fun.y = "mean") +
   scale_x_continuous("calendar hours") +
@@ -146,13 +149,14 @@ ggplot(experiment_3) +
   base_theme
 ```
 
-# Experiment 4
+# Aggregate functions
 
 ```{r}
-experiment_4 <- read_csv("experiment-4.csv") %>%
-  recode_fitness_as_pct()
+aggregate_fns <- get_experiment_data("aggregate-functions") 
 
-ggplot(experiment_4) +
+ggplot(aggregate_fns) +
   aes(time, fitness_pct, color = aggregate_fn) +
-  geom_line(stat = "summary", fun.y = "mean")
+  geom_line(stat = "summary", fun.y = "mean") +
+  scale_color_brewer(palette = "Set2") +
+  base_theme
 ```
