@@ -4,23 +4,26 @@ import json
 
 
 class Team:
-    def __init__(self, players, name='unnamed'):
+    def __init__(self, players, name='anonymous'):
         self.name = name
         self.players = players
         self.active_players = players
         self.pos = (0, 0)
 
     @classmethod
-    def from_player_attributes(cls, *player_attributes, name=None):
+    def from_player_attributes(cls, *player_attributes, **kwargs):
         """Create players before adding them to a team."""
         players = [Player(**attributes) for attributes in player_attributes]
-        return cls(players, name=name)
+        return cls(players, **kwargs)
 
-    def new_pos(self):
+    def new_pos(self, aggregate_fn='sum'):
         """Generate a new position from current position and player deltas."""
         deltas = [player.delta() for player in self.active_players]
-        total_delta = numpy.array(deltas).sum(axis=0)
-        new_pos = numpy.array([self.pos, total_delta]).sum(axis=0)
+        try:
+            agg_delta = getattr(numpy.array(deltas), aggregate_fn)(axis=0)
+        except Exception as err:
+            raise AggregateFunctionNotFound(err)
+        new_pos = numpy.array([self.pos, agg_delta]).sum(axis=0)
         return new_pos.tolist()
 
     def set_seed(self, seed):
@@ -68,3 +71,7 @@ class Player:
 
     def __str__(self):
         return json.dumps(self.to_dict())
+
+
+class AggregateFunctionNotFound(Exception):
+    """Probably due to a config error."""

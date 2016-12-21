@@ -5,7 +5,7 @@ import pandas
 from .config import Experiment
 
 
-SIM_VARS = 'team landscape strategy labor_hours starting_pos seed'.split()
+SIM_VARS = 'team landscape strategy aggregate_fn labor_hours starting_pos seed'.split()
 DATA_COLS = SIM_VARS + 'time pos fitness'.split()
 
 
@@ -19,7 +19,7 @@ def run_experiment(experiment_yaml, output=None):
     output.close()
 
 
-def simulate(team, landscape, strategy, labor_hours, starting_pos, seed):
+def simulate(team, landscape, strategy, aggregate_fn, labor_hours, starting_pos, seed):
     """Run a single simulation: a mountain climbing excursion.
 
     WARNING! simulate is expected to have the same call signature as SIM_VARS.
@@ -31,7 +31,7 @@ def simulate(team, landscape, strategy, labor_hours, starting_pos, seed):
     results = []
 
     for calendar_hour in strategy(labor_hours, team):
-        new_pos = team.new_pos()
+        new_pos = team.new_pos(aggregate_fn)
         new_fitness = landscape.evaluate(new_pos)
         if new_fitness > fitness:
             team.pos = new_pos
@@ -41,6 +41,7 @@ def simulate(team, landscape, strategy, labor_hours, starting_pos, seed):
             team=str(team),
             landscape=str(landscape),
             strategy=strategy.__name__,
+            aggregate_fn=aggregate_fn,
             labor_hours=labor_hours,
             starting_pos=starting_pos,
             seed=seed,

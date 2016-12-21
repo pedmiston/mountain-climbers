@@ -43,3 +43,10 @@ def test_player_deltas_are_reproducibly_random():
 def test_default_agg_function():
     exp = peaks.Experiment()
     assert exp.aggregate_fn == ['sum']
+
+
+def test_different_agg_functions(team):
+    team.new_pos()
+    team.new_pos('mean')
+    team.new_pos('max')
+    team.new_pos('prod')
