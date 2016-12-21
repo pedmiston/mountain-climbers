@@ -145,3 +145,14 @@ ggplot(experiment_3) +
   scale_color_strategy +
   base_theme
 ```
+
+# Experiment 4
+
+```{r}
+experiment_4 <- read_csv("experiment-4.csv") %>%
+  recode_fitness_as_pct()
+
+ggplot(experiment_4) +
+  aes(time, fitness_pct, color = aggregate_fn) +
+  geom_line(stat = "summary", fun.y = "mean")
+```

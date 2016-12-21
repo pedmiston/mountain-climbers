@@ -62,7 +62,7 @@ class Experiment:
         props = [getattr(self, prop) for prop in ordered_properties]
         return product(*props)
 
-    def get_as_list(self, key, default):
+    def get_as_list(self, key, default=None):
         data = self._data.get(key, default)
         if not isinstance(data, list):
             data = [data]

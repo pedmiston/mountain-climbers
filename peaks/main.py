@@ -47,7 +47,7 @@ def simulate(team, landscape, strategy, aggregate_fn, labor_hours, starting_pos,
             seed=seed,
             time=calendar_hour,
             pos=json.dumps(team.pos),
-            fitness=fitness,
+            fitness=float(fitness),
         ))
 
     return pandas.DataFrame.from_records(results, columns=DATA_COLS)
