@@ -5,13 +5,17 @@ title: "Mountain Climbers"
 ```{r, include=FALSE}
 library(knitr)
 opts_chunk$set(
-  echo=FALSE,
-  message=FALSE,
-  fig.path="figs/"
+  echo = FALSE,
+  message = FALSE,
+  fig.path = "figs/",
+  cache = TRUE,
+  cache.path = ".cache/"
 )
 
 library(tidyverse)
 library(magrittr)
+
+library(evoteams)
 library(crotchet)
 read_graphviz_chunk("team-structures", "evoteams")
 ```
@@ -81,6 +85,7 @@ get_theme_color_values <- function(names) theme_colors[names] %>% unname()
 
 scale_color_strategy <- scale_color_manual(
   "strategy",
+  labels = c("diachronic", "synchronic"),
   values = get_theme_color_values(c("green", "blue"))
 )
 
@@ -96,7 +101,36 @@ scale_alpha_team <- scale_alpha_discrete(
 )
 ```
 
+# Team structures
+
 ```{r team-structures, engine="dot", fig.width=2}
+```
+
+```{r time, fig.width = 3, fig.height = 3}
+diachronic <- data_frame(
+  strategy = "diachronic",
+  calendar_hours = 0:100,
+  labor_hours = calendar_hours
+)
+
+synchronic <- data_frame(
+  strategy = "synchronic",
+  calendar_hours = 0:50,
+  labor_hours = calendar_hours * 2
+)
+
+time <- rbind(diachronic, synchronic)
+
+axis_breaks <- c(0, 50, 100)
+axis_labels <- c(0, expression(1/2), 1)
+
+ggplot(time, aes(calendar_hours, labor_hours)) +
+  geom_line(aes(color = strategy), size = 1.0) +
+  scale_x_continuous("calendar hours", breaks = axis_breaks, labels = axis_labels) +
+  scale_y_continuous("labor hours", breaks = axis_breaks, labels = axis_labels) +
+  scale_color_strategy +
+  base_theme +
+  theme(legend.position = "top")
 ```
 
 # Identical team
