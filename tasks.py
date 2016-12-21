@@ -14,7 +14,7 @@ def simulate(ctx, experiment):
         for experiment in Path('experiments').listdir('*.yaml'):
             print(' - ' + experiment.stem)
         return
-    elif experiment == '*':
+    elif experiment == 'all':
         experiments = Path('experiments').listdir('*.yaml')
     elif Path(experiment).exists():
         experiments = [Path(experiment)]

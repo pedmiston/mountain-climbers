@@ -11,7 +11,7 @@
 ## Run experiment
 
     inv simulate ?    # view experiments
-    inv simulate '*'  # run all experiments. (quotes prevent bash expansion)
+    inv simulate all  # run all experiments
     inv simulate identical-teams
     inv simulate path/to/custom-experiment.yaml
 

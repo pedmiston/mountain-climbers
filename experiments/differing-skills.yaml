@@ -25,5 +25,5 @@ teams:
     - { vision_x: 2, vision_y: 8 }
     - { vision_x: 8, vision_y: 2 }
   e:
-    - { vision_x: 9, vision_y: 1 }
     - { vision_x: 1, vision_y: 9 }
+    - { vision_x: 9, vision_y: 1 }

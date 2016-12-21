@@ -47,7 +47,11 @@ recode_team <- function(frame) {
     select(team, team_id) %>%
     unique() %>%
     arrange(team_id) %>%
-    mutate(team_label = factor(team_id, levels = team_levels))
+    mutate(
+      team_label = factor(team_id, levels = team_levels),
+      team_label_rev = factor(team_id, levels = rev(team_levels),
+                              labels = 0:4)
+    )
   
   left_join(frame, team_map)
 }
@@ -98,7 +102,8 @@ scale_alpha_team <- scale_alpha_discrete(
 # Identical team
 
 ```{r}
-identical_team <- get_experiment_data("identical-team")
+identical_team <- get_experiment_data("identical-team") %>%
+  extract_position()
 
 ggplot(identical_team) +
   aes(time, fitness_pct, color = strategy) +
@@ -110,10 +115,6 @@ ggplot(identical_team) +
 ```
 
 ```{r}
-identical_team %<>%
-  extract_position() %>%
-  mutate(sim_id = paste(strategy, seed, starting_pos, sep = ":"))
-
 set.seed(782)
 sample_sim_ids <- identical_team %>%
   group_by(strategy, starting_pos) %>%
@@ -142,7 +143,8 @@ random_walk_plot
 
 ```{r}
 differing_skills <- get_experiment_data("differing-skills") %>%
-  recode_team()
+  recode_team() %>%
+  extract_position()
 
 ggplot(differing_skills) +
   aes(time, fitness_pct, alpha = team_label, color = strategy) +
@@ -154,6 +156,11 @@ ggplot(differing_skills) +
   guides(color = guide_legend(order = 1),
          alpha = guide_legend(order = 2)) +
   base_theme
+```
+
+```{r}
+(random_walk_plot %+% differing_skills) +
+  facet_grid(strategy ~ team_label_rev)
 ```
 
 # Rate of alternation

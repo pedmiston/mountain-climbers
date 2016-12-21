@@ -15,6 +15,7 @@ def run_experiment(experiment_yaml, output=None):
     output = open(output, 'w') if output else stdout
     for i, run in enumerate(exp.simulations(SIM_VARS)):
         results = simulate(*run)
+        results.insert(0, 'sim_id', i)
         results.to_csv(output, index=False, header=(i==0))
     output.close()
 
