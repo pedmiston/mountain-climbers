@@ -4,7 +4,11 @@ title: "Mountain Climbers"
 
 ```{r, include=FALSE}
 library(knitr)
-opts_chunk$set(echo=FALSE, message=FALSE)
+opts_chunk$set(
+  echo=FALSE,
+  message=FALSE,
+  fig.path="figs/"
+)
 
 library(tidyverse)
 library(magrittr)
@@ -35,17 +39,7 @@ extract_position <- function(frame) {
 }
 
 recode_team <- function(frame) {
-  teams <- unique(frame$team) %>%
-    map(function(team) {
-      data <- jsonlite::fromJSON(team)
-      data$players %>%
-        mutate(
-          player = 1:n(),
-          team_id = data$name,
-          team = team
-        )
-    }) %>%
-    bind_rows()
+  teams <- get_team_info(frame)
 
   # Order teams from most disjoint to least
   team_levels <- letters[5:1]
@@ -56,6 +50,20 @@ recode_team <- function(frame) {
     mutate(team_label = factor(team_id, levels = team_levels))
   
   left_join(frame, team_map)
+}
+
+get_team_info <- function(frame) {
+  unique(frame$team) %>%
+    map(function(team) {
+      data <- jsonlite::fromJSON(team)
+      data$players %>%
+        mutate(
+          player = 1:n(),
+          team_id = data$name,
+          team = team
+        )
+    }) %>%
+    bind_rows()
 }
 ```
 
@@ -76,6 +84,11 @@ scale_color_team_label <- scale_color_manual(
   "skill overlap",
   labels = c("4 disjoint", "3", "2 overlapping", "1", "0 identical"),
   values = brewer.pal(7, "BuGn")[7:3]
+)
+scale_alpha_team <- scale_alpha_discrete(
+  "skill overlap",
+  labels = c("4 disjoint", "3", "2 overlapping", "1", "0 identical"),
+  range = c(1.0, 0.1)
 )
 ```
 
@@ -99,22 +112,30 @@ ggplot(identical_team) +
 ```{r}
 identical_team %<>%
   extract_position() %>%
-  mutate(sim_id = paste(strategy, seed, sep = ":"))
+  mutate(sim_id = paste(strategy, seed, starting_pos, sep = ":"))
 
+set.seed(782)
 sample_sim_ids <- identical_team %>%
-  group_by(strategy) %>%
-  sample_n(5) %>%
+  group_by(strategy, starting_pos) %>%
+  sample_n(1) %>%
   .$sim_id
 
-ggplot(identical_team %>% filter(sim_id %in% sample_sim_ids)) +
+random_walk_plot <- ggplot(identical_team) +
   aes(pos_x, pos_y, group = sim_id, color = strategy) +
-  geom_point(size = 0.5) +
-  geom_line() +
+  geom_path(alpha = 0.2) +
+  annotate("point", x = 0, y = 0, shape = 4) +
   coord_equal() +
   facet_wrap("strategy") +
+  labs(x = "x", y = "y") +
   scale_color_strategy +
   base_theme +
   theme(legend.position = "none")
+
+random_walk_plot %+%
+  filter(identical_team, sim_id %in% sample_sim_ids) +
+  geom_path()
+
+random_walk_plot
 ```
 
 # Differing skills
@@ -124,14 +145,14 @@ differing_skills <- get_experiment_data("differing-skills") %>%
   recode_team()
 
 ggplot(differing_skills) +
-  aes(time, fitness_pct, color = team_label, lty = strategy) +
+  aes(time, fitness_pct, alpha = team_label, color = strategy) +
   geom_line(stat = "summary", fun.y = "mean") +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
-  scale_linetype_manual(values = c("solid", "longdash")) +
-  scale_color_team_label +
-  guides(lty = guide_legend(order = 1),
-         color = guide_legend(order = 2)) +
+  scale_color_strategy +
+  scale_alpha_team +
+  guides(color = guide_legend(order = 1),
+         alpha = guide_legend(order = 2)) +
   base_theme
 ```
 

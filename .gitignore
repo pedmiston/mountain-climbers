@@ -4,3 +4,4 @@ __pycache__/
 *.swp
 .Rproj.user
 *.html
+figs/
