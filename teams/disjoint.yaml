@@ -1,8 +1,0 @@
----
-
-player_a:
-  vision_x: 1
-  vision_y: 10
-player_b:
-  vision_x: 10
-  vision_y: 1
