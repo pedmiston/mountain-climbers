@@ -9,7 +9,12 @@ import peaks
 
 @task
 def simulate(ctx, experiment):
-    if experiment == '*':
+    if experiment == '?':
+        print('Experiments:')
+        for experiment in Path('experiments').listdir('*.yaml'):
+            print(' - ' + experiment.stem)
+        return
+    elif experiment == '*':
         experiments = Path('experiments').listdir('*.yaml')
     elif Path(experiment).exists():
         experiments = [Path(experiment)]
@@ -20,7 +25,7 @@ def simulate(ctx, experiment):
 
     for experiment in experiments:
         output = Path('experiments', experiment.stem + '.csv')
-        print('running experiment %s' % experiment.stem)
+        print('Running experiment %s' % experiment.stem)
         peaks.run_experiment(experiment, output=output)
 
 

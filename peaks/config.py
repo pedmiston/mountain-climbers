@@ -37,7 +37,12 @@ class Experiment:
     @property
     def starting_pos(self):
         """Return a list of tuples containing (x, y) starting positions."""
-        return [tuple(self._data['starting_pos'])]
+        # get_as_list won't work since a single coord is a list
+        starting_pos = self._data['starting_pos']
+        if len(starting_pos) == 2 and isinstance(starting_pos[0], int):
+            # given a single coord
+            starting_pos = [starting_pos]
+        return starting_pos
 
     @property
     def seed(self):

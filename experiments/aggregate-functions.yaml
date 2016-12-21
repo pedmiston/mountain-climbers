@@ -1,9 +1,13 @@
-# Experiment 1
+---
 
 landscapes: SimpleHill
 strategies: synchronic
 labor_hours: 50
-starting_pos: [-100, -100]
+starting_pos:
+  - [100, 100]
+  - [100, -100]
+  - [-100, -100]
+  - [-100, 100]
 n_seeds: 100
 aggregate_fn:
   - sum
