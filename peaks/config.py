@@ -8,9 +8,9 @@ from .models import Team
 
 class Experiment:
     """Object-oriented approach to config parsing."""
-    def __init__(self, data):
+    def __init__(self, data=None):
         """Experiments are created from config data."""
-        self._data = data
+        self._data = data or dict()
 
     @classmethod
     def from_yaml(cls, experiment_yaml):
@@ -53,13 +53,17 @@ class Experiment:
                                                      name=name))
         return teams
 
+    @property
+    def aggregate_fn(self):
+        return self.get_as_list('aggregate_fn', 'sum')
+
     def simulations(self, ordered_properties):
         """Returns a simulation generator of the product of all properties."""
         props = [getattr(self, prop) for prop in ordered_properties]
         return product(*props)
 
-    def get_as_list(self, key):
-        data = self._data[key]
+    def get_as_list(self, key, default):
+        data = self._data.get(key, default)
         if not isinstance(data, list):
             data = [data]
         return data
