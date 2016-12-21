@@ -106,7 +106,9 @@ scale_alpha_team <- scale_alpha_discrete(
 ```{r team-structures, engine="dot", fig.width=2}
 ```
 
-```{r time, fig.width = 3, fig.height = 3}
+# Types of time
+
+```{r types-of-time, fig.width = 3, fig.height = 3}
 diachronic <- data_frame(
   strategy = "diachronic",
   calendar_hours = 0:100,
@@ -131,6 +133,128 @@ ggplot(time, aes(calendar_hours, labor_hours)) +
   scale_color_strategy +
   base_theme +
   theme(legend.position = "top")
+```
+
+# Team abilities
+
+```{r team-abilities}
+teams <- get_experiment_data("differing-skills") %>%
+  get_team_info() %>%
+  gather(dimension, value, -c(team, player, team_id)) %>%
+  recode_team() %>%
+  select(-team)
+
+legend_text <- data_frame(
+  team_label_rev = factor(0, levels = 0:4),
+  player = 1,
+  value = c(0.1, 0.1),
+  dimension = c("vision_x", "vision_y"),
+  label = c("vision x", "vision y")
+)
+
+dodge_width <- position_dodge(width = 0.9)
+
+ggplot(teams, aes(x = player, y = value, group = dimension)) +
+  geom_bar(aes(fill = team_label_rev, alpha = dimension),
+           stat = "identity", position = dodge_width) +
+  facet_wrap("team_label_rev", nrow = 1) +
+  geom_text(aes(label = label), data = legend_text, position = dodge_width,
+         angle = 90, vjust = 0.4, hjust = 0) +
+  scale_x_continuous(breaks = c(1, 2)) +
+  scale_y_continuous("vision", breaks = 1:10, expand = c(0, 0)) +
+  scale_fill_brewer(palette = "Set2") +
+  scale_alpha_manual(values = c(0.5, 0.9)) +
+  coord_cartesian(ylim = c(0, 9)) +
+  base_theme +
+  theme(
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank()
+  ) +
+  labs(title = "Types of two person teams varying in skill distribution")
+```
+
+```{r, eval=FALSE}
+ggplot(preds, aes(x = player, y = value, group = skill)) +
+  geom_bar(aes(fill = team_ability, alpha = skill),
+           stat = "identity", position = dodge_width) +
+  facet_wrap("team_ability_label", nrow = 1) +
+  scale_fill_brewer(palette = "Set2") +
+  scale_alpha_manual(values = c(0.5, 0.9)) +
+  geom_text(aes(label = label), data = legend_text, position = dodge_width,
+            angle = 90, vjust = 0.5, hjust = 0) +
+  base_theme +
+  labs(title = "Types of two person teams varying in skill distribution")
+
+t_range <- seq(0, 2 * pi, length.out = 100)
+ellipse_x <- function(t, a, x0 = 0) x0 + a * cos(t)
+ellipse_y <- function(t, b, y0 = 0) y0 + b * sin(t)
+
+# Create a list of different area functions.
+# Each fn returns data.frames with the same col names.
+search_areas <- list(
+  overlapping = function(player) {
+    data_frame(
+      player = player,
+      team_ability = "identical",
+      a = ellipse_x(t_range, 10),
+      b = ellipse_y(t_range, 10)
+    )
+  },
+  disjoint = function(player) {
+    args <- list(
+      x = list(a = 17, b = 3),
+      y = list(a = 3, b = 17)
+    )[[player]]
+    data_frame(
+      player = player,
+      team_ability = "disjoint",
+      a = ellipse_x(t_range, args[["a"]]),
+      b = ellipse_y(t_range, args[["b"]])
+    )
+  },
+  intersecting = function(player) {
+    args <- list(
+      x = list(a = 12, b = 8),
+      y = list(a = 8, b = 12)
+    )[[player]]
+    data_frame(
+      player = player,
+      team_ability = "intersecting",
+      a = ellipse_x(t_range, args[["a"]]),
+      b = ellipse_y(t_range, args[["b"]])
+    )
+  }
+)
+
+spotlight_coords <- lapply(search_areas, function(area_fn) {
+    # generate areas for players x and y and bind them together
+    bind_rows(area_fn('x'), area_fn('y'))
+  }) %>%
+  # bind across area_fns
+  bind_rows() %>%
+  recode_team_abilities
+
+legend_text <- data_frame(
+  team_ability = "disjoint",
+  player = c("x", "y"),
+  a = c(10, 0),
+  b = c(0, 10),
+  label = c("player x", "player y"),
+  angle = c(0, 90)
+) %>%
+  recode_team_abilities
+
+ggplot(spotlight_coords, aes(a, b, group = player)) +
+  geom_polygon(aes(fill = team_ability, alpha = player)) +
+  facet_wrap("team_ability_label") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_alpha_manual(values = c(0.5, 0.9)) +
+  geom_text(aes(label = label, angle = angle), data = legend_text,
+            vjust = 0.5) +
+  base_theme +
+  labs(title = "Abilities of two person teams as search areas in problem space")
 ```
 
 # Identical team
