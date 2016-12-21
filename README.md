@@ -10,7 +10,10 @@
 
 ## Run experiment
 
-    inv simulate experiment-1.yaml -o experiment-1.csv
+    inv simulate ?    # view experiments
+    inv simulate '*'  # run all experiments. (quotes prevent bash expansion)
+    inv simulate identical-teams
+    inv simulate path/to/custom-experiment.yaml
 
 ## Analyze results
 
