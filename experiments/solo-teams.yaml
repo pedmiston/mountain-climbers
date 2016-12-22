@@ -1,0 +1,23 @@
+---
+
+landscapes: SimpleHill
+strategies: solo
+labor_hours: 50
+starting_pos:
+  - [100, 100]
+  - [100, -100]
+  - [-100, -100]
+  - [-100, 100]
+n_seeds: 100
+teams:
+  a:
+    - { vision_x: 5, vision_y: 5 }
+  b:
+    - { vision_x: 4, vision_y: 6 }
+  c:
+    - { vision_x: 3, vision_y: 7 }
+  d:
+    - { vision_x: 2, vision_y: 8 }
+  e:
+    - { vision_x: 1, vision_y: 9 }
+
