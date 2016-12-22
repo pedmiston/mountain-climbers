@@ -1,7 +1,9 @@
 ---
 
 landscapes: SimpleHill
-strategies: solo
+strategies:
+  - solo
+  - diachronic
 labor_hours: 50
 starting_pos:
   - [100, 100]
@@ -12,12 +14,16 @@ n_seeds: 100
 teams:
   a:
     - { vision_x: 5, vision_y: 5 }
+    - { vision_x: 5, vision_y: 5 }
   b:
     - { vision_x: 4, vision_y: 6 }
+    - { vision_x: 6, vision_y: 4 }
   c:
     - { vision_x: 3, vision_y: 7 }
+    - { vision_x: 7, vision_y: 3 }
   d:
     - { vision_x: 2, vision_y: 8 }
+    - { vision_x: 8, vision_y: 2 }
   e:
     - { vision_x: 1, vision_y: 9 }
-
+    - { vision_x: 9, vision_y: 1 }

@@ -80,13 +80,13 @@ library(RColorBrewer)
 base_theme <- theme_minimal()
 
 theme_colors <- brewer.pal(4, "Set2")
-names(theme_colors) <- c("blue", "orange", "green", "pink")
+names(theme_colors) <- c("green", "orange", "blue", "pink")
 get_theme_color_values <- function(names) theme_colors[names] %>% unname()
 
 scale_color_strategy <- scale_color_manual(
   "strategy",
   labels = c("diachronic", "synchronic"),
-  values = get_theme_color_values(c("green", "blue"))
+  values = get_theme_color_values(c("blue", "green"))
 )
 
 scale_color_team_label <- scale_color_manual(
@@ -319,6 +319,24 @@ ggplot(differing_skills) +
 ```{r}
 (random_walk_plot %+% differing_skills) +
   facet_grid(strategy ~ team_label_rev)
+```
+
+# Solo teams
+
+```{r}
+solo_teams <- get_experiment_data("solo-teams") %>%
+  recode_team()
+
+ggplot(solo_teams) +
+  aes(time, fitness_pct, alpha = team_label, color = strategy) +
+  geom_line(stat = "summary", fun.y = "mean") +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_manual("strategy", values = get_theme_color_values(c("blue", "green"))) +
+  scale_alpha_team +
+  guides(color = guide_legend(order = 1),
+         alpha = guide_legend(order = 2)) +
+  base_theme
 ```
 
 # Rate of alternation

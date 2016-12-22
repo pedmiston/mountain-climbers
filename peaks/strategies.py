@@ -25,7 +25,7 @@ def alternating(labor_hours, team):
 
 
 def solo(labor_hours, team):
-    assert len(team.players) == 1, 'solo team does not have exactly 1 player'
-    team.active_players = [team.players[0]]
-    for calendar_hour in range(labor_hours * 2):
+    """Use the first player in the team."""
+    team.active_players = [team.players[0]]  # using first player in team
+    for calendar_hour in range(labor_hours * len(team.players)):
         yield calendar_hour
