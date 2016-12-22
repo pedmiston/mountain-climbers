@@ -2,10 +2,17 @@
 # Experiment 3
 landscapes: SimpleHill
 strategies:
-    - diachronic
-    - alternating
+  - diachronic
+  - diachronic_2
+  - diachronic_3
+  - diachronic_4
+  - diachronic_max
 labor_hours: 50
-starting_pos: [-100, -100]
+starting_pos:
+  - [100, 100]
+  - [100, -100]
+  - [-100, -100]
+  - [-100, 100]
 n_seeds: 100
 teams:
   disjoint:

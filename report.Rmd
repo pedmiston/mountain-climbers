@@ -127,7 +127,7 @@ axis_breaks <- c(0, 50, 100)
 axis_labels <- c(0, expression(1/2), 1)
 
 ggplot(time, aes(calendar_hours, labor_hours)) +
-  geom_line(aes(color = strategy), size = 1.0) +
+  geom_line(aes(color = strategy), size = 1.2) +
   scale_x_continuous("calendar hours", breaks = axis_breaks, labels = axis_labels) +
   scale_y_continuous("labor hours", breaks = axis_breaks, labels = axis_labels) +
   scale_color_strategy +
@@ -265,7 +265,7 @@ identical_team <- get_experiment_data("identical-team") %>%
 
 ggplot(identical_team) +
   aes(time, fitness_pct, color = strategy) +
-  geom_line(stat = "summary", fun.y = "mean") +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
   scale_color_strategy +
@@ -306,7 +306,7 @@ differing_skills <- get_experiment_data("differing-skills") %>%
 
 ggplot(differing_skills) +
   aes(time, fitness_pct, alpha = team_label, color = strategy) +
-  geom_line(stat = "summary", fun.y = "mean") +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
   scale_color_strategy +
@@ -329,7 +329,7 @@ solo_teams <- get_experiment_data("solo-teams") %>%
 
 ggplot(solo_teams) +
   aes(time, fitness_pct, alpha = team_label, color = strategy) +
-  geom_line(stat = "summary", fun.y = "mean") +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
   scale_color_manual("strategy", values = get_theme_color_values(c("blue", "green"))) +
@@ -339,17 +339,26 @@ ggplot(solo_teams) +
   base_theme
 ```
 
-# Rate of alternation
+# Number of exchanges
 
 ```{r}
-alternating <- get_experiment_data("alternating")
+exchange_rate_strategies <- c("diachronic", "diachronic_2", "diachronic_3", "diachronic_4", "diachronic_max")
+exchange_rate_labels <- c(1:4, "max")
+exchange_rate_map <- data_frame(
+  strategy = exchange_rate_strategies,
+  exchange_rate = factor(exchange_rate_strategies, levels = exchange_rate_strategies,
+                         labels = exchange_rate_labels)
+)
+
+alternating <- get_experiment_data("alternating") %>%
+  left_join(exchange_rate_map)
 
 ggplot(alternating) +
-  aes(time, fitness_pct, color = strategy) +
-  geom_line(stat = "summary", fun.y = "mean") +
+  aes(time, fitness_pct, color = exchange_rate) +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
-  scale_color_strategy +
+  scale_color_brewer("exchanges", palette = "Set2", guide = guide_legend(reverse = TRUE)) +
   base_theme
 ```
 
@@ -360,7 +369,9 @@ aggregate_fns <- get_experiment_data("aggregate-functions")
 
 ggplot(aggregate_fns) +
   aes(time, fitness_pct, color = aggregate_fn) +
-  geom_line(stat = "summary", fun.y = "mean") +
-  scale_color_brewer(palette = "Set2") +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_brewer("aggregate function", palette = "Set2") +
   base_theme
 ```

@@ -25,7 +25,7 @@ def simulate(ctx, experiment):
 
     for experiment in experiments:
         output = Path('experiments', experiment.stem + '.csv')
-        print('Running experiment %s' % experiment.stem)
+        print('Running experiment { %s }' % experiment.stem)
         peaks.run_experiment(experiment, output=output)
 
 
