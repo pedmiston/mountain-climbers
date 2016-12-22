@@ -62,6 +62,10 @@ class Experiment:
     def aggregate_fn(self):
         return self.get_as_list('aggregate_fn', 'sum')
 
+    @property
+    def p_feedback(self):
+        return self.get_as_list('prob_feedback', 1.0)
+
     def simulations(self, ordered_properties):
         """Returns a simulation generator of the product of all properties."""
         props = [getattr(self, prop) for prop in ordered_properties]

@@ -40,9 +40,10 @@ def test_player_deltas_are_reproducibly_random():
     assert next_steps != orig_deltas
 
 
-def test_default_agg_function():
+def test_default_config_vars():
     exp = peaks.Experiment()
     assert exp.aggregate_fn == ['sum']
+    assert exp.p_feedback == [1.0]
 
 
 def test_different_agg_functions(team):
