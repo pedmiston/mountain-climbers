@@ -11,6 +11,7 @@ fig_height <- 4
 opts_chunk$set(
   echo = FALSE,
   message = FALSE,
+  warning = FALSE,
   fig.path = "figs/",
   fig.width = fig_width,
   fig.height = fig_height,
@@ -80,6 +81,11 @@ get_team_info <- function(frame) {
     }) %>%
     bind_rows()
 }
+
+diagram_graphviz <- function(name, package, ...) {
+  find_graphviz(name, package) %>%
+    DiagrammeR::grViz(...)
+}
 ```
 
 ```{r theme, include=FALSE}
@@ -110,12 +116,17 @@ scale_alpha_team <- scale_alpha_discrete(
 
 # Team structures
 
-```{r team-structures, engine="dot", fig.width=2}
+```{r team-structures-all, fig.width=2}
+diagram_graphviz("team-structures-all", package = "evoteams")
 ```
+
+The first assumption of these simulations is that there is no cost to handing the project off in the diachronic team. This means that if a diachronic team consists of two equally skilled individuals (two clones), it's performance is indistinguishable from the performance of one of those individuals working the whole time.
+
+The second assumption is that there is no learning taking place over the course of the simulation. Individuals have the same skills at the beginning of the task as they do at the end of it. This assumption is also necessary in order for solo "teams" to be identical to diachronic teams consisting of two equally skilled individuals.
 
 # Types of time
 
-```{r types-of-time, fig.width = 3, fig.height = 3}
+```{r time-plot, fig.keep="none"}
 diachronic <- data_frame(
   strategy = "diachronic",
   calendar_hours = 0:100,
@@ -131,15 +142,44 @@ synchronic <- data_frame(
 time <- rbind(diachronic, synchronic)
 
 axis_breaks <- c(0, 50, 100)
-axis_labels <- c(0, expression(1/2), 1)
+axis_labels <- axis_breaks
 
-ggplot(time, aes(calendar_hours, labor_hours)) +
+(gg_time <- ggplot(time, aes(calendar_hours, labor_hours)) +
   geom_line(aes(color = strategy), size = 1.2) +
   scale_x_continuous("calendar hours", breaks = axis_breaks, labels = axis_labels) +
   scale_y_continuous("labor hours", breaks = axis_breaks, labels = axis_labels) +
   scale_color_strategy +
   base_theme +
-  theme(legend.position = "top")
+  theme(legend.position = "top"))
+```
+
+```{r min-steps, fig.keep="none"}
+start_radius <- 100
+hyp_distance <- sqrt(2 * start_radius^2)
+synchronic_max <- sqrt(2 * 10^2)
+synchronic_calendar_hours <- 50
+diachronic_max <- sqrt(2 * 5^2)
+diachronic_calendar_hours <- 100
+
+min_steps <- data_frame(
+  strategy = c("synchronic", "diachronic"),
+  labor_hours_to_peak = c(
+    (hyp_distance/synchronic_max),
+    (hyp_distance/diachronic_max)))
+
+(gg_min_steps <- ggplot(min_steps) +
+  aes(strategy, labor_hours_to_peak, fill = strategy) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous("calendar hours to peak (minimum)",
+                     breaks = c(0, 10, 20)) +
+  scale_fill_manual(values = get_theme_color_values(c("blue", "green"))) +
+  base_theme +
+  theme(legend.position = "none",
+        panel.grid.major.x = element_blank()))
+```
+
+```{r}
+grid.arrange(gg_time, gg_min_steps, nrow = 1)
 ```
 
 # Team abilities
@@ -179,7 +219,7 @@ ggplot(teams, aes(x = player, y = value, group = dimension)) +
     panel.grid.minor.x = element_blank(),
     panel.grid.minor.y = element_blank()
   ) +
-  labs(title = "Types of two person teams varying in skill distribution")
+  labs(title = "Types of two agent teams varying in ability")
 ```
 
 ```{r, eval=FALSE}
@@ -275,7 +315,11 @@ ggplot(identical_team) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
-  scale_color_strategy +
+  scale_color_manual(
+    "strategy",
+    labels = c("solo", "synchronic"),
+    values = get_theme_color_values(c("blue", "green")),
+    guide = guide_legend(reverse = TRUE)) +
   base_theme
 ```
 
