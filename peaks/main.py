@@ -1,34 +1,18 @@
 from sys import stdout
 from collections import namedtuple
 
-simulation_vars = """
-team
-landscape
-strategy
-aggregate_fn
-p_feedback
-labor_hours
-starting_pos
-seed
-""".strip().split('\n')
+import yaml
 
-result_vars = simulation_vars + """
-time
-feedback
-pos
-fitness
-""".strip().split('\n')
-
-Settings = namedtuple('Settings', simulation_vars)
-Results = namedtuple('Results', result_vars)
+from .config import Simulation, Result
 
 
 def run_experiment(experiment_yaml, output=None):
     """Run an experiment, which is a collection of simulations."""
     experiment = Experiment.from_yaml(experiment_yaml)
     output = open(output, 'w') if output else stdout
-    for simulation in experiment.simulations():
-        simulation.run(output)
+    for i, simulation in enumerate(experiment.simulations()):
+        results = simulation.run()
+        results.to_csv(output, index=False, header=(i==0), method='a')
     output.close()
 
 
@@ -42,6 +26,12 @@ class Experiment:
     def from_yaml(cls, experiment_yaml):
         data = yaml.load(open(experiment_yaml))
         return cls(data)
+
+    def simulations(self):
+        """Returns simulations for the product of all properties."""
+        props = [getattr(self, prop) for prop in self.ordered_properties]
+        for sim_vars in product(*props):
+            yield Simulation(sim_vars)
 
     @property
     def landscape(self):
@@ -92,12 +82,6 @@ class Experiment:
     def p_feedback(self):
         return self.get_as_list('prob_feedback', 1.0)
 
-    def simulations(self):
-        """Returns a simulation generator of the product of all properties."""
-        props = [getattr(self, prop) for prop in self.ordered_properties]
-        for sim_vars in product(*props):
-            yield Simulation(sim_vars)
-
     def get_as_list(self, key, default=None):
         data = self._data.get(key, default)
         if not isinstance(data, list):
@@ -110,7 +94,7 @@ class Simulator:
         self.vars = sim_vars
 
     def run(self):
-    """Run a single simulation: a mountain climbing excursion."""
+        """Run a single simulation: a mountain climbing excursion."""
         rand = numpy.random.RandomState(seed)
 
         team.pos = list(starting_pos)
