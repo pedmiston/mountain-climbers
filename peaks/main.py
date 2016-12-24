@@ -1,8 +1,15 @@
 from sys import stdout
 from collections import namedtuple
+from itertools import product
+import json
 
 import yaml
+import numpy
+import pandas
 
+from . import landscapes
+from . import strategies
+from .models import Team
 from .config import Simulation, Result
 
 
@@ -12,7 +19,8 @@ def run_experiment(experiment_yaml, output=None):
     output = open(output, 'w') if output else stdout
     for i, simulation in enumerate(experiment.simulations()):
         results = simulation.run()
-        results.to_csv(output, index=False, header=(i==0), method='a')
+        results.insert(0, 'sim_id', i)
+        results.to_csv(output, index=False, header=(i==0), mode='a')
     output.close()
 
 
@@ -29,9 +37,10 @@ class Experiment:
 
     def simulations(self):
         """Returns simulations for the product of all properties."""
-        props = [getattr(self, prop) for prop in self.ordered_properties]
+        props = [getattr(self, prop) for prop in Simulation._fields]
         for sim_vars in product(*props):
-            yield Simulation(sim_vars)
+            config = Simulation(*sim_vars)
+            yield Simulator(config)
 
     @property
     def landscape(self):
@@ -90,48 +99,50 @@ class Experiment:
 
 
 class Simulator:
-    def __init__(self, sim_vars):
-        self.vars = sim_vars
+    def __init__(self, sim):
+        self._sim = sim
+        self.data_cols = Simulation._fields + Result._fields
 
     def run(self):
         """Run a single simulation: a mountain climbing excursion."""
-        rand = numpy.random.RandomState(seed)
+        s = self._sim
+        rand = numpy.random.RandomState(s.seed)
 
-        team.pos = list(starting_pos)
-        team.set_seed(seed)
-        fitness = landscape.evaluate(team.pos)
+        s.team.pos = list(s.starting_pos)
+        s.team.set_seed(s.seed)
+        fitness = s.landscape.evaluate(s.team.pos)
 
         results = []
 
-        for calendar_hour in strategy(labor_hours, team):
-            new_pos = team.new_pos(aggregate_fn)
-            new_fitness = landscape.evaluate(new_pos)
+        for calendar_hour in s.strategy(s.labor_hours, s.team):
+            new_pos = s.team.new_pos(s.aggregate_fn)
+            new_fitness = s.landscape.evaluate(new_pos)
 
-            feedback_trial = rand.choice([1, 0], p=[p_feedback, 1-p_feedback])
+            feedback_trial = rand.choice([1, 0], p=[s.p_feedback, 1-s.p_feedback])
             if not feedback_trial:
-                team.pos = new_pos
+                s.team.pos = new_pos
                 fitness = new_fitness
             else:
                 # For feedback trials, only change position if
                 # it improves fitness.
                 if new_fitness > fitness:
-                    team.pos = new_pos
+                    s.team.pos = new_pos
                     fitness = new_fitness
                 # else don't change team pos
 
             results.append(dict(
-                team=str(team),
-                landscape=str(landscape),
-                strategy=strategy.__name__,
-                aggregate_fn=aggregate_fn,
-                p_feedback=p_feedback,
-                labor_hours=labor_hours,
-                starting_pos=starting_pos,
-                seed=seed,
+                team=str(s.team),
+                landscape=str(s.landscape),
+                strategy=s.strategy.__name__,
+                aggregate_fn=s.aggregate_fn,
+                p_feedback=s.p_feedback,
+                labor_hours=s.labor_hours,
+                starting_pos=s.starting_pos,
+                seed=s.seed,
                 time=calendar_hour,
                 feedback=int(feedback_trial),
-                pos=json.dumps(team.pos),
+                pos=json.dumps(s.team.pos),
                 fitness=float(fitness),
             ))
 
-        return pandas.DataFrame.from_records(results, columns=DATA_COLS)
+        return pandas.DataFrame.from_records(results, columns=self.data_cols)

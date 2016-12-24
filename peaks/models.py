@@ -56,10 +56,8 @@ class Player:
 
     def set_seed(self, seed=None):
         if seed and isinstance(seed, numpy.random.RandomState):
-            print('setting player seed to existing random state')
             rand = seed
         else:
-            print('creating a new random state for player')
             rand = numpy.random.RandomState(seed)
         self._pick_one = partial(rand.choice, size=1)
 

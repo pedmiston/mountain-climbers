@@ -30,8 +30,13 @@ def simulate(ctx, experiment):
 
 
 @task
-def report(ctx, open_after=False):
+def report(ctx, clear_cache=False, open_after=False):
     Rscript = "rmarkdown::render('report.Rmd')"
+
+    if clear_cache:
+        ctx.run('rm -rf .cache/ figs/')
+
     ctx.run('Rscript -e "{}"'.format(Rscript))
+
     if open_after:
         ctx.run('open report.html')
