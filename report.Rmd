@@ -25,7 +25,6 @@ library(gridExtra)
 
 library(evoteams)
 library(crotchet)
-read_graphviz_chunk("team-structures", "evoteams")
 ```
 
 ```{r helper-functions, include=FALSE}
@@ -80,11 +79,6 @@ get_team_info <- function(frame) {
         )
     }) %>%
     bind_rows()
-}
-
-diagram_graphviz <- function(name, package, ...) {
-  find_graphviz(name, package) %>%
-    DiagrammeR::grViz(...)
 }
 ```
 
@@ -163,23 +157,33 @@ diachronic_calendar_hours <- 100
 
 min_steps <- data_frame(
   strategy = c("synchronic", "diachronic"),
-  labor_hours_to_peak = c(
+  labor_hours_per_calendar_hour = c(2, 1),
+  calendar_hours_to_peak = c(
     (hyp_distance/synchronic_max),
-    (hyp_distance/diachronic_max)))
+    (hyp_distance/diachronic_max)
+  ),
+  labor_hours_to_peak = calendar_hours_to_peak * labor_hours_per_calendar_hour)
 
-(gg_min_steps <- ggplot(min_steps) +
-  aes(strategy, labor_hours_to_peak, fill = strategy) +
+gg_min_steps <- ggplot(min_steps) +
   geom_bar(stat = "identity") +
-  scale_y_continuous("calendar hours to peak (minimum)",
-                     breaks = c(0, 10, 20)) +
   scale_fill_manual(values = get_theme_color_values(c("blue", "green"))) +
   base_theme +
   theme(legend.position = "none",
-        panel.grid.major.x = element_blank()))
+        panel.grid.major.x = element_blank())
+
+(gg_min_calendar <- gg_min_steps +
+  aes(strategy, calendar_hours_to_peak, fill = strategy) +
+  scale_y_continuous("calendar hours to peak (minimum)",
+                     breaks = c(0, 10, 20)))
+
+(gg_min_labor <- gg_min_steps +
+  aes(strategy, labor_hours_to_peak, fill = strategy) +
+  scale_y_continuous("labor hours to peak (minimum)",
+                     breaks = c(0, 10, 20)))
 ```
 
-```{r}
-grid.arrange(gg_time, gg_min_steps, nrow = 1)
+```{r, fig.width = fig_width * 2}
+grid.arrange(gg_time, gg_min_calendar, gg_min_labor, nrow = 1)
 ```
 
 # Team abilities

@@ -30,8 +30,11 @@ def simulate(ctx, experiment):
 
 
 @task
-def report(ctx, clear_cache=False, open_after=False):
+def report(ctx, clear_cache=False, open_after=False, skip_prereqs=False):
     Rscript = "rmarkdown::render('report.Rmd')"
+
+    if not skip_prereqs:
+        ctx.run('Rscript -e "devtools::install_github(\'pedmiston/crotchet\')"')
 
     if clear_cache:
         ctx.run('rm -rf .cache/ figs/')
