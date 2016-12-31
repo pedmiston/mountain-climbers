@@ -1,12 +1,13 @@
 ---
-# Experiment 3
+
 landscapes: SimpleHill
 strategies:
   - diachronic
-  - diachronic_2
-  - diachronic_3
-  - diachronic_4
-  - diachronic_max
+  - synchronic
+prob_feedback:
+  - 1.0
+  - 0.5
+  - 0.1
 labor_hours: 50
 starting_pos:
   - [100, 100]
@@ -15,6 +16,6 @@ starting_pos:
   - [-100, 100]
 n_seeds: 100
 teams:
-  disjoint:
-    - { vision_x: 9, vision_y: 1 }
-    - { vision_x: 1, vision_y: 9 }
+  identical:
+    - { vision_x: 5, vision_y: 5 }
+    - { vision_x: 5, vision_y: 5 }

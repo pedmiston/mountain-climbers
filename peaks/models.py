@@ -4,11 +4,12 @@ import json
 
 
 class Team:
-    def __init__(self, players, name='anonymous'):
+    def __init__(self, players, name='anonymous', seed=None):
         self.name = name
         self.players = players
         self.active_players = players
         self.pos = (0, 0)
+        self.set_seed(seed)
 
     @classmethod
     def from_player_attributes(cls, *player_attributes, **kwargs):
@@ -26,11 +27,10 @@ class Team:
         new_pos = numpy.array([self.pos, agg_delta]).sum(axis=0)
         return new_pos.tolist()
 
-    def set_seed(self, seed):
+    def set_seed(self, seed=None):
         rand = numpy.random.RandomState(seed)
-        player_seeds = rand.randint(100, size=len(self.players)).tolist()
-        for ix, s in enumerate(player_seeds):
-            self.players[ix].set_seed(s)
+        for player in self.players:
+            player.set_seed(rand)
 
     def __str__(self):
         return json.dumps(dict(
@@ -45,7 +45,6 @@ class Player:
         self.vision_y = vision_y
         self.sight_x = Player.vision_to_sight(vision_x)
         self.sight_y = Player.vision_to_sight(vision_y)
-        self.set_seed()
 
     @staticmethod
     def vision_to_sight(vision):
@@ -57,7 +56,11 @@ class Player:
         return range(-vision, vision+1)
 
     def set_seed(self, seed=None):
-        self._pick_one = partial(numpy.random.RandomState(seed).choice, size=1)
+        if seed and isinstance(seed, numpy.random.RandomState):
+            rand = seed
+        else:
+            rand = numpy.random.RandomState(seed)
+        self._pick_one = partial(rand.choice, size=1)
 
     def pick_one(self, values):
         return self._pick_one(values)[0]
