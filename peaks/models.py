@@ -4,11 +4,12 @@ import json
 
 
 class Team:
-    def __init__(self, players, name='anonymous'):
+    def __init__(self, players, name='anonymous', seed=None):
         self.name = name
         self.players = players
         self.active_players = players
         self.pos = (0, 0)
+        self.set_seed(seed)
 
     @classmethod
     def from_player_attributes(cls, *player_attributes, **kwargs):
