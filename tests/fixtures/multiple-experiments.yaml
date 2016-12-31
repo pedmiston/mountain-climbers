@@ -1,0 +1,23 @@
+---
+# experiment 1a
+landscapes: SimpleHill
+strategies: diachronic
+labor_hours: 50
+starting_pos: [100, 100]
+n_seeds: 1
+teams:
+  identical:
+    - { vision_x: 5, vision_y: 5 }
+    - { vision_x: 5, vision_y: 5 }
+
+---
+# experiment 1b
+landscapes: SimpleHill
+strategies: synchronic
+labor_hours: 100
+starting_pos: [100, 100]
+n_seeds: 1
+teams:
+  identical:
+    - { vision_x: 5, vision_y: 5 }
+    - { vision_x: 5, vision_y: 5 }

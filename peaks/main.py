@@ -15,12 +15,16 @@ from .config import Simulation, Result
 
 def run_experiment(experiment_yaml, output=None):
     """Run an experiment, which is a collection of simulations."""
-    experiment = Experiment.from_yaml(experiment_yaml)
+    experiments = Experiment.from_yaml(experiment_yaml)
     output = open(output, 'w') if output else stdout
-    for i, simulation in enumerate(experiment.simulations()):
-        results = simulation.run()
-        results.insert(0, 'sim_id', i)
-        results.to_csv(output, index=False, header=(i==0), mode='a')
+    for exp_id, experiment in enumerate(experiments):
+        for sim_id, simulation in enumerate(experiment.simulations()):
+            results = simulation.run()
+            results.insert(0, 'sim_id', sim_id)
+            results.insert(0, 'exp_id', exp_id)
+
+            first_write = (exp_id == sim_id == 0)
+            results.to_csv(output, index=False, header=first_write, mode='a')
     output.close()
 
 
@@ -32,8 +36,9 @@ class Experiment:
 
     @classmethod
     def from_yaml(cls, experiment_yaml):
-        data = yaml.load(open(experiment_yaml))
-        return cls(data)
+        """Yields experiments contained in a yaml file."""
+        for data in yaml.load_all(open(experiment_yaml)):
+            yield cls(data)
 
     def simulations(self):
         """Returns simulations for the product of all properties."""
