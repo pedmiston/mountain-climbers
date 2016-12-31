@@ -37,7 +37,8 @@ library(crotchet)
 get_experiment_data <- function(experiment) {
   file.path("experiments", paste0(experiment, ".csv")) %>%
     read_csv() %>%
-    recode_fitness_as_pct()
+    recode_fitness_as_pct() %>%
+    mutate(sim_id = paste(exp_id, sim_id, sep = ":"))
 }
 
 recode_fitness_as_pct <- function(frame) {
@@ -136,13 +137,6 @@ z <- as.matrix(z)
 
 plot_ly(x = limits, y = limits, z = z) %>%
   add_surface()
-```
-
-### Volcano
-
-```{r volcano}
-data(volcano)
-plot_ly(z = ~volcano) %>% add_surface()
 ```
 
 ## Types of time
@@ -363,11 +357,12 @@ ggplot(identical_team) +
 ```{r}
 set.seed(782)
 sample_sim_ids <- identical_team %>%
+  filter(exp_id == 1) %>%
   group_by(strategy, starting_pos) %>%
   sample_n(1) %>%
   .$sim_id
 
-random_walk_plot <- ggplot(identical_team) +
+random_walk_plot <- ggplot(identical_team %>% filter(exp_id == 1)) +
   aes(pos_x, pos_y, group = sim_id, color = strategy) +
   geom_path(alpha = 0.2) +
   annotate("point", x = 0, y = 0, shape = 4) +
@@ -405,7 +400,7 @@ ggplot(differing_skills) +
 ```
 
 ```{r}
-(random_walk_plot %+% differing_skills) +
+(random_walk_plot %+% filter(differing_skills, exp_id == 1)) +
   facet_grid(strategy ~ team_label_rev)
 ```
 
