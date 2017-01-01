@@ -29,12 +29,16 @@ custom packages that can be installed from github with devtools.
 ## Run experiment
 
     # bash
-    inv simulate ?    # view experiments
-    inv simulate all  # run all experiments
-    inv simulate identical-teams
-    inv simulate path/to/custom-experiment.yaml
+    inv -h run       # read help on run command
+    inv run ?        # list all experiments in "experiments/"
+    inv run all      # run all experiments
+    inv run [exp-1]  # run experiment in "experiments/" from stem name
+    inv run [experiments/exp-1.yaml] # run same experiment as above
 
 ## Analyze results
 
     # bash
-    inv report --open-after
+    inv -h report   # get help on report command
+    inv report      # compile the report
+    inv report --clear-cache --open-after
+    inv report -co  # short form of above
