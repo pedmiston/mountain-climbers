@@ -6,11 +6,10 @@ strategies:
   - synchronic
 labor_hours: 50
 starting_pos:
-  - [100, 100]
-  - [100, -100]
-  - [-100, -100]
-  - [-100, 100]
-n_seeds: 100
+  radius: 100
+  size: 100
+  seed: 2
+n_seeds: 10
 teams:
   identical:
     - { vision_x: 5, vision_y: 5 }
