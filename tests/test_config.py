@@ -1,5 +1,8 @@
+import math
 from unipath import Path
 import peaks
+
+import pytest
 
 tests_dir = Path(__file__).parent.absolute()
 fixtures_dir = Path(tests_dir, 'fixtures')
@@ -33,3 +36,19 @@ def test_specific_starting_positions():
     multiple_pos_exp = make_exp([[100, 100], [200, 200]]).starting_pos
     assert len(multiple_pos_exp) == 2
     assert multiple_pos_exp[1] == [200, 200]
+
+def test_radial_starting_positions():
+
+    def make_exp(arg):
+        return peaks.Experiment(data=dict(starting_pos=arg))
+
+    radius = 10
+    size = 10
+    radius_starting_pos = make_exp(dict(radius=radius, size=size)).starting_pos
+    assert len(radius_starting_pos) == size
+
+    def hyp(a, b):
+        return math.sqrt(a**2 + b**2)
+
+    assert all([hyp(x, y) == pytest.approx(radius)
+                for x, y in radius_starting_pos])

@@ -2,6 +2,7 @@ from sys import stdout
 from collections import namedtuple
 from itertools import product
 import json
+import math
 
 import yaml
 import numpy
@@ -69,7 +70,10 @@ class Experiment:
         """Return a list of tuples containing (x, y) starting positions."""
         # get_as_list won't work since a single coord is a list
         starting_pos = self._data['starting_pos']
-        if len(starting_pos) == 2 and isinstance(starting_pos[0], int):
+        if isinstance(starting_pos, dict):
+            # given a radius and number of points to sample
+            starting_pos = sample_equidistant_positions(**starting_pos)
+        elif len(starting_pos) == 2 and isinstance(starting_pos[0], int):
             # given a single coord
             starting_pos = [starting_pos]
         return starting_pos
@@ -151,3 +155,15 @@ class Simulator:
             ))
 
         return pandas.DataFrame.from_records(results, columns=self.data_cols)
+
+
+def sample_equidistant_positions(radius, size, seed=None):
+    rand = numpy.random.RandomState(seed)
+    phis = rand.uniform(0, 2 * math.pi, size=size)
+
+    def pol2cart(rho, phi):
+        x = rho * numpy.cos(phi)
+        y = rho * numpy.sin(phi)
+        return (x, y)
+
+    return [pol2cart(radius, phi) for phi in phis]
