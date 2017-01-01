@@ -52,3 +52,15 @@ def test_radial_starting_positions():
 
     assert all([hyp(x, y) == pytest.approx(radius)
                 for x, y in radius_starting_pos])
+
+def test_radial_starting_positions_are_repeatable():
+
+    def make_exp(arg):
+        return peaks.Experiment(data=dict(starting_pos=arg))
+
+    orig = make_exp(dict(radius=10, size=10, seed=10)).starting_pos
+    dupl = make_exp(dict(radius=10, size=10, seed=10)).starting_pos
+    assert orig == dupl
+
+    diff = make_exp(dict(radius=10, size=10, seed=11)).starting_pos
+    assert orig != diff
