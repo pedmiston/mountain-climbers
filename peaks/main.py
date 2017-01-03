@@ -30,7 +30,17 @@ def run_experiment(experiment_yaml, output=None):
 
 
 class Experiment:
-    """Object-oriented config parsing."""
+    """Object-oriented config parsing.
+
+    An experiment is a friendly wrapper around a dict of experiment data.
+    This data is easiest to obtain from a yaml file. Variables in the
+    experiment are accessible as properties.
+
+    **Experiment variables are not parsed until they are needed.**
+
+    This makes it easy to test individual properties of experiments,
+    but I'm sure it will bite me eventually.
+    """
     def __init__(self, data=None):
         """Experiments are created from config data."""
         self._data = data or dict()
@@ -76,12 +86,28 @@ class Experiment:
 
     @property
     def starting_pos(self):
-        """Return a list of tuples containing (x, y) starting positions."""
+        """Return a list of tuples containing (x, y) starting positions.
+
+        Examples of inputs:
+            [100, 100]                            # single position
+            [[100, 100], [-100, -100]]            # multiple positions
+            {'radius': 10, 'size': 10}            # radius and n points
+            {'radius': 10, 'degrees': 45}         # radius and degree (single)
+            {'radius': 10, 'degrees': [45, 135]}  # radius and degrees
+        """
         # get_as_list won't work since a single coord is a list
         starting_pos = self._data['starting_pos']
         if isinstance(starting_pos, dict):
-            # given a radius and number of points to sample
-            starting_pos = sample_equidistant_positions(**starting_pos)
+            if 'degrees' in starting_pos:
+                assert 'radius' in starting_pos
+                rho = starting_pos.get('radius', 0)
+                phis = starting_pos['degrees']
+                if not isinstance(phis, list):
+                    phis = [phis]
+                starting_pos = [pol2cart(rho, phi) for phi in phis]
+            else:
+                # given a radius and number of points to sample
+                starting_pos = sample_equidistant_positions(**starting_pos)
         elif len(starting_pos) == 2 and isinstance(starting_pos[0], int):
             # given a single coord
             starting_pos = [starting_pos]
@@ -169,10 +195,10 @@ class Simulator:
 def sample_equidistant_positions(radius, size, seed=None):
     rand = numpy.random.RandomState(seed)
     phis = rand.uniform(0, 2 * math.pi, size=size)
-
-    def pol2cart(rho, phi):
-        x = rho * numpy.cos(phi)
-        y = rho * numpy.sin(phi)
-        return (x, y)
-
     return [pol2cart(radius, phi) for phi in phis]
+
+
+def pol2cart(rho, phi):
+    x = rho * numpy.cos(phi)
+    y = rho * numpy.sin(phi)
+    return (x, y)
