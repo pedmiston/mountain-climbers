@@ -45,9 +45,24 @@ def run(ctx, experiment):
 @task(help={'clear-cache': 'Clear knitr cache and figs before rendering.',
             'open-after': 'Open the report after creating it.',
             'skip-prereqs': 'Don\'t try to update custom prereqs.'})
-def report(ctx, clear_cache=False, open_after=False, skip_prereqs=False):
+def report(ctx, name, clear_cache=False, open_after=False, skip_prereqs=False):
     """Compile dynamic reports from the results of the experiments."""
-    Rscript = "rmarkdown::render('report.Rmd')"
+    report_dir = Path('.')
+    output_dir = Path('reports')
+
+    if name == '?':
+        print('Reports:')
+        for report in report_dir.listdir('*.Rmd'):
+            print(' - ' + report.stem)
+        return
+    elif name == 'all':
+        reports = report_dir.listdir('*.Rmd')
+    elif Path(name).exists():
+        reports = [name]
+    else:
+        report = Path(report_dir, name + '.Rmd')
+        assert report.exists(), 'report %s not found' % report
+        reports = [report]
 
     if not skip_prereqs:
         ctx.run('Rscript -e "devtools::install_github(\'pedmiston/crotchet\')"')
@@ -55,7 +70,10 @@ def report(ctx, clear_cache=False, open_after=False, skip_prereqs=False):
     if clear_cache:
         ctx.run('rm -rf .cache/ figs/')
 
-    ctx.run('Rscript -e "{}"'.format(Rscript))
+    render_cmd = 'Rscript -e "rmarkdown::render(\'{}\', output_dir=\'{}\')"'
+    for report in reports:
+        ctx.run(render_cmd.format(report, output_dir))
 
-    if open_after:
-        ctx.run('open report.html')
+        if open_after:
+            output = Path(output_dir, report.stem + '.html')
+            ctx.run('open {}'.format(output))

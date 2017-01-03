@@ -1,0 +1,9 @@
+```{r, include=FALSE}
+source("R/base.R")
+source("R/helpers.R")
+source("R/theme.R")
+```
+
+```{r team-structures}
+diagram_graphviz("team-structures", package = "evoteams")
+```

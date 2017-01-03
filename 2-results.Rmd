@@ -1,0 +1,162 @@
+# Results
+
+```{r, include=FALSE}
+source("R/base.R")
+source("R/helpers.R")
+source("R/theme.R")
+```
+
+## Identical teammates
+
+```{r}
+identical_team <- get_experiment_data("identical-team") %>%
+  extract_position()
+
+ggplot(identical_team) +
+  aes(time, fitness_pct, color = strategy) +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_manual(
+    "strategy",
+    labels = c("solo", "synchronic"),
+    values = get_theme_color_values(c("blue", "green")),
+    guide = guide_legend(reverse = TRUE)) +
+  base_theme
+```
+
+```{r}
+set.seed(782)
+sample_sim_ids <- identical_team %>%
+  filter(exp_id == 1) %>%
+  group_by(strategy, starting_pos) %>%
+  sample_n(1) %>%
+  .$sim_id
+
+random_walk_plot <- ggplot(identical_team %>% filter(exp_id == 1)) +
+  aes(pos_x, pos_y, group = sim_id, color = strategy) +
+  geom_path(alpha = 0.2) +
+  annotate("point", x = 0, y = 0, shape = 4) +
+  coord_equal() +
+  facet_wrap("strategy") +
+  labs(x = "x", y = "y") +
+  scale_color_strategy +
+  base_theme +
+  theme(legend.position = "none")
+
+random_walk_plot %+%
+  filter(identical_team, sim_id %in% sample_sim_ids) +
+  geom_path()
+
+random_walk_plot
+```
+
+## Differing skills
+
+```{r}
+differing_skills <- get_experiment_data("differing-skills") %>%
+  recode_team() %>%
+  extract_position()
+
+ggplot(differing_skills) +
+  aes(time, fitness_pct, alpha = team_label, color = strategy) +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_strategy +
+  scale_alpha_team +
+  guides(color = guide_legend(order = 1),
+         alpha = guide_legend(order = 2)) +
+  base_theme
+```
+
+```{r}
+(random_walk_plot %+% filter(differing_skills, exp_id == 1)) +
+  facet_grid(strategy ~ team_label_rev)
+```
+
+## Solo teams
+
+```{r}
+solo_teams <- get_experiment_data("solo-teams") %>%
+  recode_team()
+
+ggplot(solo_teams) +
+  aes(time, fitness_pct, alpha = team_label, color = strategy) +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_manual("strategy", values = get_theme_color_values(c("blue", "green"))) +
+  scale_alpha_team +
+  guides(color = guide_legend(order = 1),
+         alpha = guide_legend(order = 2)) +
+  base_theme
+```
+
+## Number of exchanges
+
+```{r}
+exchange_rate_strategies <- c("diachronic", "diachronic_2", "diachronic_3", "diachronic_4", "diachronic_max")
+exchange_rate_labels <- c(1:4, "max")
+exchange_rate_map <- data_frame(
+  strategy = exchange_rate_strategies,
+  exchange_rate = factor(exchange_rate_strategies, levels = exchange_rate_strategies,
+                         labels = exchange_rate_labels)
+)
+
+alternating <- get_experiment_data("alternating") %>%
+  left_join(exchange_rate_map)
+
+ggplot(alternating) +
+  aes(time, fitness_pct, color = exchange_rate) +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_brewer("exchanges", palette = "Set2", guide = guide_legend(reverse = TRUE)) +
+  base_theme
+```
+
+## Aggregate functions
+
+```{r}
+aggregate_fns <- get_experiment_data("aggregate-functions")
+
+ggplot(aggregate_fns) +
+  aes(time, fitness_pct, color = aggregate_fn) +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_brewer("aggregate function", palette = "Set2") +
+  base_theme
+```
+
+## Variable feedback
+
+```{r, fig.width = fig_width * 2}
+variable_feedback <- get_experiment_data("variable-feedback")
+
+feedback_trials_plot <- ggplot(variable_feedback) +
+  aes(factor(strategy, levels = c("synchronic", "diachronic")), feedback, fill = strategy) +
+  geom_bar(aes(alpha = factor(p_feedback, levels = c(0.1, 0.5, 1.0))),
+           stat = "summary", fun.y = "sum", position = "dodge") +
+  scale_x_discrete("strategy") +
+  scale_y_continuous("feedback trials", labels = NULL) +
+  scale_fill_manual(values = get_theme_color_values(c("blue", "green"))) +
+  scale_alpha_discrete("prob feedback", labels = c("10%", "50%", "100%"), range = c(0.4, 1.0)) +
+  base_theme
+
+variable_feedback_plot <- ggplot(variable_feedback) +
+  aes(time, fitness_pct, color = strategy, alpha = factor(p_feedback)) +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_strategy +
+  scale_alpha_discrete("prob feedback", labels = c("10%", "50%", "100%"), range = c(0.6, 1.0)) +
+  guides(
+    color = guide_legend(order = 1),
+    alpha = guide_legend(order = 2, reverse = TRUE)
+  ) +
+  base_theme
+
+grid.arrange(feedback_trials_plot, variable_feedback_plot, nrow = 1)
+```
