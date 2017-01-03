@@ -1,16 +1,15 @@
 ---
-
+type: default
 landscapes: SimpleHill
-strategies:
-  - solo
-  - diachronic
-labor_hours: 50
+labor_hours: 100
 starting_pos:
-  - [100, 100]
-  - [100, -100]
-  - [-100, -100]
-  - [-100, 100]
-n_seeds: 100
+  radius: 180
+  size: 50
+  seed: 543
+n_seeds: 10
+
+---
+strategies: diachronic
 teams:
   a:
     - { vision_x: 5, vision_y: 5 }
@@ -27,3 +26,17 @@ teams:
   e:
     - { vision_x: 1, vision_y: 9 }
     - { vision_x: 9, vision_y: 1 }
+
+---
+strategies: solo
+teams:
+  a:
+    - { vision_x: 5, vision_y: 5 }
+  b:
+    - { vision_x: 4, vision_y: 6 }
+  c:
+    - { vision_x: 3, vision_y: 7 }
+  d:
+    - { vision_x: 2, vision_y: 8 }
+  e:
+    - { vision_x: 1, vision_y: 9 }

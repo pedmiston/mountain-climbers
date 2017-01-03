@@ -24,11 +24,13 @@ teams:
 
 ---
 starting_pos:
-  radius: 100
-  size: 100
+  radius: 180
+  size: 50
   seed: 2
 n_seeds: 10
 
 ---
-starting_pos: [-100, -100]
+starting_pos:
+  radius: 180
+  degrees: 225
 n_seeds: 100
