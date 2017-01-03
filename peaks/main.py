@@ -104,7 +104,7 @@ class Experiment:
                 phis = starting_pos['degrees']
                 if not isinstance(phis, list):
                     phis = [phis]
-                starting_pos = [pol2cart(rho, phi) for phi in phis]
+                starting_pos = [pol2cart(rho, to_radian(phi)) for phi in phis]
             else:
                 # given a radius and number of points to sample
                 starting_pos = sample_equidistant_positions(**starting_pos)
@@ -202,3 +202,6 @@ def pol2cart(rho, phi):
     x = rho * numpy.cos(phi)
     y = rho * numpy.sin(phi)
     return (x, y)
+
+def to_radian(degree):
+    return degree*(math.pi/180)
