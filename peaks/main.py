@@ -38,7 +38,16 @@ class Experiment:
     @classmethod
     def from_yaml(cls, experiment_yaml):
         """Yields experiments contained in a yaml file."""
-        for data in yaml.load_all(open(experiment_yaml)):
+        defaults = dict()
+        for config in yaml.load_all(open(experiment_yaml)):
+            if 'type' in config:
+                config_type = config.pop('type')
+                if config_type == 'default':
+                    defaults.update(config)
+                    continue
+
+            data = defaults.copy()
+            data.update(config)
             yield cls(data)
 
     def simulations(self):
