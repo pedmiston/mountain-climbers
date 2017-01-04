@@ -11,7 +11,7 @@ prob_feedback:
 labor_hours: 100
 starting_pos:
   radius: 180
-  size: 50
+  size: 100
   seed: 883
 n_seeds: 10
 teams:

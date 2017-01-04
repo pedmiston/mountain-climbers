@@ -4,7 +4,7 @@ landscapes: SimpleHill
 labor_hours: 100
 starting_pos:
   radius: 180
-  size: 50
+  size: 100
   seed: 543
 n_seeds: 10
 
