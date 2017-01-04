@@ -55,15 +55,13 @@ axis_labels <- axis_breaks
 ability <- data_frame(vision = 1:9)
 
 (gg_single_dimension <- ggplot(ability) +
-  aes(vision, vision, label = vision) +
+  aes(vision, vision) +
   geom_bar(aes(alpha = vision), stat = "identity", fill = theme_colors[["blue"]]) +
-  geom_text(vjust = -0.5) +
   scale_x_continuous("", breaks = NULL) +
-  scale_y_continuous("vision", breaks = 1:10, labels = NULL,
-                     position = "right") +
+  scale_y_continuous("vision", breaks = 1:9) +
   scale_alpha_continuous(range = c(0.5, 1.0)) +
   guides(alpha = "none") +
-  coord_cartesian(xlim = c(1, 10), ylim = c(0, 9.6)) +
+  coord_cartesian(xlim = c(1, 9.2), ylim = c(0, 9.6)) +
   base_theme +
   theme(
     panel.grid.minor.y = element_blank()
@@ -93,7 +91,7 @@ tradeoffs_plot <- ggplot() +
            stat = "identity", position = dodge_width) +
   facet_wrap("team_label_rev", nrow = 1) +
   geom_text(aes(label = label), data = legend_text, position = dodge_width,
-         angle = 90, vjust = 0.5, hjust = 0) +
+            angle = 90, vjust = 0.5, hjust = 0) +
   scale_x_continuous(breaks = c(1, 2)) +
   scale_y_continuous("vision", breaks = 1:10, expand = c(0, 0)) +
   scale_fill_brewer(palette = "Set2") +
@@ -109,10 +107,11 @@ tradeoffs_plot <- ggplot() +
 
 (gg_two_dimensions <- (tradeoffs_plot %+% filter(teams, player == 1)) +
   scale_x_continuous("", labels = NULL) +
+  theme(strip.text = element_blank()) +
   labs(title = "Vision in two dimensions"))
 
 (gg_differing_skills <- (tradeoffs_plot %+% teams) +
-  labs(title = "Types of two agent teams varying in ability"))
+  labs(title = "Two person teams varying in vision distribution"))
 
 grid.arrange(
   arrangeGrob(gg_single_dimension, gg_two_dimensions, nrow = 1),
@@ -123,12 +122,14 @@ grid.arrange(
 
 # Vision and search areas
 
-```{r}
-# Calculate the range of positions that could be search by this team
+```{r, fig.width=8, fig.height=2}
+# Vision of 1 gives a visible range of 3 (from -1 to 1)
+visible_range <- function(vision) vision * 2 + 1
+
+# Vision in two dimensions is a search area
 calculate_search_area <- function(vision_x, vision_y) {
-  # vision of 1 gives a visible range of 3 (-1, 0, 1)
-  visible_range <- function(vision) vision * 2 + 1
-  visible_range(vision_x) * visible_range(vision_y)
+  search_area <- visible_range(vision_x) * visible_range(vision_y)
+  return(search_area)
 }
 
 search_areas <- data_frame(
@@ -137,7 +138,12 @@ search_areas <- data_frame(
   search_area = calculate_search_area(vision_x, vision_y)
 )
 
-diachronic_team_search_areas <- search_areas %>% mutate(strategy = "diachronic")
+diachronic_team_search_areas <- search_areas %>%
+  mutate(
+    strategy = "diachronic",
+    team_label_rev = factor(0:4)
+  )
+
 synchronic_team_search_areas <- data_frame(
   vision_x = 10, vision_y = 10,
   search_area = calculate_search_area(vision_x, vision_y),
@@ -146,7 +152,42 @@ synchronic_team_search_areas <- data_frame(
 )
 
 search_areas_by_strategy <- bind_rows(diachronic_team_search_areas,
-                                      synchronic_team_search_areas)
+                                      synchronic_team_search_areas) %>%
+  mutate(vision_x_range = visible_range(vision_x),
+         vision_y_range = visible_range(vision_y))
+
+gg_search_areas <- ggplot() +
+  aes(x = 0, y = 0, width = vision_y_range, height = vision_x_range,
+      fill = team_label_rev) +
+  geom_tile() +
+  scale_x_continuous("vision x", labels = NULL) +
+  scale_y_continuous("vision y", labels = NULL) +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  coord_cartesian(xlim = c(-10, 10), ylim = c(-10, 10)) +
+  facet_wrap("team_label_rev", nrow = 1, scales = "fixed") +
+  base_theme +
+  theme(strip.text = element_blank())
+  
+(gg_search_rects <- (gg_search_areas %+% filter(search_areas_by_strategy, strategy == "diachronic")))
+```
+
+```{r}
+search_areas_by_strategy %<>%
+  arrange(vision_y) %>%
+  mutate(
+    visions = paste0("(", vision_x, ",", vision_y, ")"),
+    visions_f = factor(visions, levels = visions)
+  )
+
+ggplot(search_areas_by_strategy) +
+  aes(visions_f, search_area, fill = visions_f) +
+  geom_bar(stat = "identity") +
+  annotate("text", x = 6, y = 10, label = "all synchronic teams",
+           hjust = -0.1, angle = 90) +
+  scale_x_discrete("(vision x, vision y)") +
+  scale_y_continuous("search area") +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  base_theme
 ```
 
 # Landscapes
