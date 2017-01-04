@@ -4,10 +4,8 @@ output:
   html_document:
     theme: flatly
     toc: true
-    toc_depth: 2
+    toc_depth: 1
 ---
-
-# Methods
 
 ```{r, include=FALSE}
 source("R/base.R")
@@ -15,35 +13,15 @@ source("R/helpers.R")
 source("R/theme.R")
 ```
 
-## Team structures
+# Team structures
 
-```{r team-structures-all, fig.width=2}
-diagram_graphviz("team-structures-all", package = "evoteams")
+```{r team-structures, fig.width=2}
+diagram_graphviz("team-structures", package = "evoteams")
 ```
 
-## Landscapes
+# Labor hours and calendar hours
 
-### Simple hill
-
-```{r simple-hill}
-limits <- -100:100
-z <- expand.grid(x = limits, y = limits) %>%
-  mutate(z = -x^2 - y^2) %>%
-  spread(y, z)
-z$x <- NULL  # bug! dplyr::select(-x) doesn't work
-z <- as.matrix(z)
-
-plot_ly(x = limits, y = limits, z = z) %>%
-  add_surface()
-```
-
-## Types of time
-
-The first assumption of these simulations is that there is no cost to handing the project off in the diachronic team. This means that if a diachronic team consists of two equally skilled individuals (two clones), it's performance is indistinguishable from the performance of one of those individuals working the whole time.
-
-The second assumption is that there is no learning taking place over the course of the simulation. Individuals have the same skills at the beginning of the task as they do at the end of it. This assumption is also necessary in order for solo "teams" to be identical to diachronic teams consisting of two equally skilled individuals.
-
-```{r time-plot, fig.keep="none"}
+```{r time-plot, fig.width=4, fig.height=4}
 diachronic <- data_frame(
   strategy = "diachronic",
   calendar_hours = 0:100,
@@ -66,52 +44,33 @@ axis_labels <- axis_breaks
   scale_x_continuous("calendar hours", breaks = axis_breaks, labels = axis_labels) +
   scale_y_continuous("labor hours", breaks = axis_breaks, labels = axis_labels) +
   scale_color_strategy +
+  guides(color = guide_legend(reverse = TRUE)) +
   base_theme +
   theme(legend.position = "top"))
 ```
 
-```{r min-steps, fig.keep="none"}
-start_radius <- 100
-hyp_distance <- sqrt(2 * start_radius^2)
-synchronic_max <- sqrt(2 * 10^2)
-synchronic_calendar_hours <- 50
-diachronic_max <- sqrt(2 * 5^2)
-diachronic_calendar_hours <- 100
+# Ability as vision
 
-min_steps <- data_frame(
-  strategy = c("synchronic", "diachronic"),
-  labor_hours_per_calendar_hour = c(2, 1),
-  calendar_hours_to_peak = c(
-    (hyp_distance/synchronic_max),
-    (hyp_distance/diachronic_max)
-  ),
-  labor_hours_to_peak = calendar_hours_to_peak * labor_hours_per_calendar_hour)
+```{r, fig.keep='last', fig.width=6, fig.height=6}
+ability <- data_frame(vision = 1:9)
 
-gg_min_steps <- ggplot(min_steps) +
-  geom_bar(stat = "identity") +
-  scale_fill_manual(values = get_theme_color_values(c("blue", "green"))) +
+(gg_single_dimension <- ggplot(ability) +
+  aes(vision, vision, label = vision) +
+  geom_bar(aes(alpha = vision), stat = "identity", fill = theme_colors[["blue"]]) +
+  geom_text(vjust = -0.5) +
+  scale_x_continuous("", breaks = NULL) +
+  scale_y_continuous("vision", breaks = 1:10, labels = NULL,
+                     position = "right") +
+  scale_alpha_continuous(range = c(0.5, 1.0)) +
+  guides(alpha = "none") +
+  coord_cartesian(xlim = c(1, 10), ylim = c(0, 9.6)) +
   base_theme +
-  theme(legend.position = "none",
-        panel.grid.major.x = element_blank())
+  theme(
+    panel.grid.minor.y = element_blank()
+  ) +
+  ggtitle("Vision in a single dimension")
+)
 
-(gg_min_calendar <- gg_min_steps +
-  aes(strategy, calendar_hours_to_peak, fill = strategy) +
-  scale_y_continuous("calendar hours to peak (minimum)",
-                     breaks = c(0, 10, 20)))
-
-(gg_min_labor <- gg_min_steps +
-  aes(strategy, labor_hours_to_peak, fill = strategy) +
-  scale_y_continuous("labor hours to peak (minimum)",
-                     breaks = c(0, 10, 20)))
-```
-
-```{r, fig.width = fig_width * 2}
-grid.arrange(gg_time, gg_min_calendar, gg_min_labor, nrow = 1)
-```
-
-## Team abilities
-
-```{r team-abilities}
 teams <- get_experiment_data("differing-skills") %>%
   get_team_info() %>%
   gather(dimension, value, -c(team, player, team_id)) %>%
@@ -128,16 +87,17 @@ legend_text <- data_frame(
 
 dodge_width <- position_dodge(width = 0.9)
 
-ggplot(teams, aes(x = player, y = value, group = dimension)) +
+tradeoffs_plot <- ggplot() +
+  aes(x = player, y = value, group = dimension) +
   geom_bar(aes(fill = team_label_rev, alpha = dimension),
            stat = "identity", position = dodge_width) +
   facet_wrap("team_label_rev", nrow = 1) +
   geom_text(aes(label = label), data = legend_text, position = dodge_width,
-         angle = 90, vjust = 0.4, hjust = 0) +
+         angle = 90, vjust = 0.5, hjust = 0) +
   scale_x_continuous(breaks = c(1, 2)) +
   scale_y_continuous("vision", breaks = 1:10, expand = c(0, 0)) +
   scale_fill_brewer(palette = "Set2") +
-  scale_alpha_manual(values = c(0.5, 0.9)) +
+  scale_alpha_manual(values = c(0.9, 0.5)) +
   coord_cartesian(ylim = c(0, 9)) +
   base_theme +
   theme(
@@ -145,88 +105,62 @@ ggplot(teams, aes(x = player, y = value, group = dimension)) +
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.minor.y = element_blank()
-  ) +
-  labs(title = "Types of two agent teams varying in ability")
+  )
+
+(gg_two_dimensions <- (tradeoffs_plot %+% filter(teams, player == 1)) +
+  scale_x_continuous("", labels = NULL) +
+  labs(title = "Vision in two dimensions"))
+
+(gg_differing_skills <- (tradeoffs_plot %+% teams) +
+  labs(title = "Types of two agent teams varying in ability"))
+
+grid.arrange(
+  arrangeGrob(gg_single_dimension, gg_two_dimensions, nrow = 1),
+  gg_differing_skills,
+  ncol = 1
+)
 ```
 
-```{r, eval=FALSE}
-ggplot(preds, aes(x = player, y = value, group = skill)) +
-  geom_bar(aes(fill = team_ability, alpha = skill),
-           stat = "identity", position = dodge_width) +
-  facet_wrap("team_ability_label", nrow = 1) +
-  scale_fill_brewer(palette = "Set2") +
-  scale_alpha_manual(values = c(0.5, 0.9)) +
-  geom_text(aes(label = label), data = legend_text, position = dodge_width,
-            angle = 90, vjust = 0.5, hjust = 0) +
-  base_theme +
-  labs(title = "Types of two person teams varying in skill distribution")
+# Vision and search areas
 
-t_range <- seq(0, 2 * pi, length.out = 100)
-ellipse_x <- function(t, a, x0 = 0) x0 + a * cos(t)
-ellipse_y <- function(t, b, y0 = 0) y0 + b * sin(t)
+```{r}
+# Calculate the range of positions that could be search by this team
+calculate_search_area <- function(vision_x, vision_y) {
+  # vision of 1 gives a visible range of 3 (-1, 0, 1)
+  visible_range <- function(vision) vision * 2 + 1
+  visible_range(vision_x) * visible_range(vision_y)
+}
 
-# Create a list of different area functions.
-# Each fn returns data.frames with the same col names.
-search_areas <- list(
-  overlapping = function(player) {
-    data_frame(
-      player = player,
-      team_ability = "identical",
-      a = ellipse_x(t_range, 10),
-      b = ellipse_y(t_range, 10)
-    )
-  },
-  disjoint = function(player) {
-    args <- list(
-      x = list(a = 17, b = 3),
-      y = list(a = 3, b = 17)
-    )[[player]]
-    data_frame(
-      player = player,
-      team_ability = "disjoint",
-      a = ellipse_x(t_range, args[["a"]]),
-      b = ellipse_y(t_range, args[["b"]])
-    )
-  },
-  intersecting = function(player) {
-    args <- list(
-      x = list(a = 12, b = 8),
-      y = list(a = 8, b = 12)
-    )[[player]]
-    data_frame(
-      player = player,
-      team_ability = "intersecting",
-      a = ellipse_x(t_range, args[["a"]]),
-      b = ellipse_y(t_range, args[["b"]])
-    )
-  }
+search_areas <- data_frame(
+  vision_x = 5:1,
+  vision_y = 5:9,
+  search_area = calculate_search_area(vision_x, vision_y)
 )
 
-spotlight_coords <- lapply(search_areas, function(area_fn) {
-    # generate areas for players x and y and bind them together
-    bind_rows(area_fn('x'), area_fn('y'))
-  }) %>%
-  # bind across area_fns
-  bind_rows() %>%
-  recode_team_abilities
+diachronic_team_search_areas <- search_areas %>% mutate(strategy = "diachronic")
+synchronic_team_search_areas <- data_frame(
+  vision_x = 10, vision_y = 10,
+  search_area = calculate_search_area(vision_x, vision_y),
+  strategy = "synchronic",
+  agg_func = "sum"
+)
 
-legend_text <- data_frame(
-  team_ability = "disjoint",
-  player = c("x", "y"),
-  a = c(10, 0),
-  b = c(0, 10),
-  label = c("player x", "player y"),
-  angle = c(0, 90)
-) %>%
-  recode_team_abilities
+search_areas_by_strategy <- bind_rows(diachronic_team_search_areas,
+                                      synchronic_team_search_areas)
+```
 
-ggplot(spotlight_coords, aes(a, b, group = player)) +
-  geom_polygon(aes(fill = team_ability, alpha = player)) +
-  facet_wrap("team_ability_label") +
-  scale_fill_brewer(palette = "Set2") +
-  scale_alpha_manual(values = c(0.5, 0.9)) +
-  geom_text(aes(label = label, angle = angle), data = legend_text,
-            vjust = 0.5) +
-  base_theme +
-  labs(title = "Abilities of two person teams as search areas in problem space")
+# Landscapes
+
+## Simple hill
+
+```{r simple-hill}
+limits <- -100:100
+z <- expand.grid(x = limits, y = limits) %>%
+  mutate(z = -x^2 - y^2) %>%
+  spread(y, z)
+z$x <- NULL  # bug! dplyr::select(-x) doesn't work
+z <- as.matrix(z)
+
+plot_ly(x = limits, y = limits, z = z) %>%
+  add_surface()
 ```
