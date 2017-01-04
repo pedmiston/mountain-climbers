@@ -10,6 +10,11 @@ scale_color_strategy <- scale_color_manual(
   labels = c("diachronic", "synchronic"),
   values = get_theme_color_values(c("blue", "green"))
 )
+scale_fill_strategy <- scale_fill_manual(
+  "strategy",
+  labels = c("diachronic", "synchronic"),
+  values = get_theme_color_values(c("blue", "green"))
+)
 
 scale_color_team_label <- scale_color_manual(
   "skill overlap",
@@ -19,5 +24,8 @@ scale_color_team_label <- scale_color_manual(
 scale_alpha_team <- scale_alpha_discrete(
   "skill overlap",
   labels = c("4 disjoint", "3", "2 overlapping", "1", "0 identical"),
-  range = c(1.0, 0.1)
+  range = c(1.0, 0.3)
 )
+
+scale_y_fitness_pct <- scale_y_continuous("fitness", labels = scales::percent)
+scale_x_strategy_rev <- scale_x_discrete("strategy", labels = c("synchronic", "diachronic"))

@@ -1,4 +1,11 @@
-# Results
+---
+title: "Experiments"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_depth: 1
+---
 
 ```{r, include=FALSE}
 source("R/base.R")
@@ -6,23 +13,46 @@ source("R/helpers.R")
 source("R/theme.R")
 ```
 
-## Identical teammates
+# Identical teammates
 
-```{r}
+```{r, fig.keep="last"}
 identical_team <- get_experiment_data("identical-team") %>%
-  extract_position()
+  extract_position() %>%
+  recode_strategy()
 
-ggplot(identical_team) +
+(gg_identical_team_timeline <- ggplot(identical_team) +
   aes(time, fitness_pct, color = strategy) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
   scale_color_manual(
     "strategy",
-    labels = c("solo", "synchronic"),
+    labels = c("diachronic", "synchronic"),
     values = get_theme_color_values(c("blue", "green")),
-    guide = guide_legend(reverse = TRUE)) +
-  base_theme
+    guide = guide_legend(reverse = TRUE)
+  ) +
+  base_theme +
+  theme(legend.position = "top"))
+
+max_fitness <- identical_team %>%
+  group_by(sim_id, strategy) %>%
+  summarize(fitness_pct = max(fitness_pct)) %>%
+  recode_strategy()
+
+(gg_identical_team_final_fitness <- ggplot(max_fitness) +
+  aes(strategy_rev, fitness_pct) +
+  geom_bar(aes(fill = strategy), stat = "summary", fun.y = "mean", alpha = 0.5) +
+  geom_point(aes(color = strategy), alpha = 0.2,
+             position = position_jitter(width = 0.2, height = 0.0)) +
+  scale_x_strategy_rev +
+  scale_y_fitness_pct +
+  scale_color_manual(values = get_theme_color_values(c("blue", "green"))) +
+  scale_fill_manual(values = get_theme_color_values(c("blue", "green"))) +
+  base_theme +
+  theme(legend.position = "none",
+        panel.grid.major.x = element_blank()))
+
+grid.arrange(gg_identical_team_timeline, gg_identical_team_final_fitness, nrow = 1)
 ```
 
 ```{r}
@@ -37,63 +67,93 @@ random_walk_plot <- ggplot(identical_team %>% filter(exp_id == 1)) +
   aes(pos_x, pos_y, group = sim_id, color = strategy) +
   geom_path(alpha = 0.2) +
   annotate("point", x = 0, y = 0, shape = 4) +
+  annotate("point", x = -127.3, y = -127.3, shape = 1) +
   coord_equal() +
-  facet_wrap("strategy") +
-  labs(x = "x", y = "y") +
+  facet_wrap("strategy_rev") +
+  scale_x_continuous("", labels = NULL) +
+  scale_y_continuous("", labels = NULL) +
   scale_color_strategy +
   base_theme +
   theme(legend.position = "none")
 
-random_walk_plot %+%
-  filter(identical_team, sim_id %in% sample_sim_ids) +
-  geom_path()
-
 random_walk_plot
 ```
 
-## Differing skills
+# Differing skills
 
-```{r}
+```{r, fig.width=10, fig.keep="last"}
 differing_skills <- get_experiment_data("differing-skills") %>%
   recode_team() %>%
   extract_position()
 
-ggplot(differing_skills) +
+(gg_differing_skills_timeline <- ggplot(differing_skills) +
   aes(time, fitness_pct, alpha = team_label, color = strategy) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
-  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_y_fitness_pct +
   scale_color_strategy +
   scale_alpha_team +
   guides(color = guide_legend(order = 1),
          alpha = guide_legend(order = 2)) +
-  base_theme
+  base_theme)
+
+max_fitness <- differing_skills %>%
+  group_by(sim_id, strategy, team_label) %>%
+  summarize(fitness_pct = max(fitness_pct)) %>%
+  recode_strategy()
+
+dodge_width <- 0.9
+team_dodge <- position_dodge(width = dodge_width)
+sim_dodge <- position_jitterdodge(dodge.width = dodge_width, jitter.width = 0.4)
+(gg_differing_skills_final_fitness <- ggplot(max_fitness) +
+    aes(x = strategy, fitness_pct, alpha = team_label) +
+    scale_y_fitness_pct +
+    # geom_point(aes(color = strategy), position = sim_dodge) +
+    geom_bar(aes(fill = strategy),
+             stat = "summary", fun.y = "mean", position = team_dodge) +
+    scale_alpha_team +
+    scale_fill_strategy +
+    guides(fill = "none") +
+    base_theme +
+    theme(panel.grid.major.x = element_blank()))
+
+grid.arrange(gg_differing_skills_timeline,
+             gg_differing_skills_final_fitness,
+             nrow = 1)
 ```
 
-```{r}
+```{r, fig.width = 8, fig.height = 5}
 (random_walk_plot %+% filter(differing_skills, exp_id == 1)) +
   facet_grid(strategy ~ team_label_rev)
 ```
 
-## Solo teams
+# Solo teams
 
-```{r}
+```{r, fig.keep="last", fig.width=10}
 solo_teams <- get_experiment_data("solo-teams") %>%
   recode_team()
 
-ggplot(solo_teams) +
-  aes(time, fitness_pct, alpha = team_label, color = strategy) +
-  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
-  scale_x_continuous("calendar hours") +
-  scale_y_continuous("fitness", labels = scales::percent) +
-  scale_color_manual("strategy", values = get_theme_color_values(c("blue", "green"))) +
-  scale_alpha_team +
-  guides(color = guide_legend(order = 1),
-         alpha = guide_legend(order = 2)) +
-  base_theme
+(gg_solo_teams_timeline <- ggplot(solo_teams) +
+    aes(time, fitness_pct, alpha = team_label, color = strategy) +
+    geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+    scale_x_continuous("calendar hours") +
+    scale_y_continuous("fitness", labels = scales::percent) +
+    scale_color_manual("strategy", values = get_theme_color_values(c("blue", "green"))) +
+    scale_alpha_team +
+    guides(color = guide_legend(order = 1),
+           alpha = guide_legend(order = 2)) +
+    base_theme)
+
+max_fitness <- solo_teams %>%
+  group_by(sim_id, strategy, team_label) %>%
+  summarize(fitness_pct = max(fitness_pct))
+
+(gg_solo_teams_final_fitness <- (gg_differing_skills_final_fitness %+% max_fitness))
+
+grid.arrange(gg_solo_teams_timeline, gg_solo_teams_final_fitness, nrow = 1)
 ```
 
-## Number of exchanges
+# Number of exchanges
 
 ```{r}
 exchange_rate_strategies <- c("diachronic", "diachronic_2", "diachronic_3", "diachronic_4", "diachronic_max")
@@ -116,7 +176,7 @@ ggplot(alternating) +
   base_theme
 ```
 
-## Aggregate functions
+# Aggregate functions
 
 ```{r}
 aggregate_fns <- get_experiment_data("aggregate-functions")
@@ -130,7 +190,7 @@ ggplot(aggregate_fns) +
   base_theme
 ```
 
-## Variable feedback
+# Variable feedback
 
 ```{r, fig.width = fig_width * 2}
 variable_feedback <- get_experiment_data("variable-feedback")

@@ -51,3 +51,12 @@ get_team_info <- function(frame) {
     }) %>%
     bind_rows()
 }
+
+recode_strategy <- function(frame) {
+  strategies <- c("diachronic", "synchronic")
+  strategy_map <- data_frame(
+    strategy = strategies,
+    strategy_rev = factor(strategies, levels = rev(strategies))
+  )
+  left_join(frame, strategy_map)
+}
