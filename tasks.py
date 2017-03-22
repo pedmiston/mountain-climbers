@@ -7,6 +7,10 @@ from unipath import Path
 import peaks
 
 
+PROJ = Path(__file__).parent.absolute()
+R_PKG = Path(PROJ, 'mountainclimbers')
+
+
 @task(help=dict(experiment='yaml file by path or stem name with no extension'))
 def run(ctx, experiment):
     """Run an experiment in "experiments/" or from a config file.
@@ -37,9 +41,32 @@ def run(ctx, experiment):
         experiments = [experiment]
 
     for experiment in experiments:
-        output = Path('experiments', experiment.stem + '.csv')
+        output = Path(R_PKG, 'data-raw', experiment.stem + '.csv')
         print('Running experiment { %s }' % experiment.stem)
         peaks.run_experiment(experiment, output=output)
+
+
+@task
+def install(ctx, verbose=False, use_data=False):
+    """Install the mountainclimbers R package."""
+    cmd = 'cd {R_pkg} && Rscript -e "{R_cmd}"'
+    R_cmds = """\
+    library(devtools)
+    document()
+    install()
+    """
+
+    if use_data:
+        use_data(ctx, verbose=verbose)
+
+    ctx.run(cmd.format(R_pkg=R_PKG, R_cmd=';'.join(R_cmds.split())),
+            echo=verbose)
+
+@task
+def use_data(ctx, verbose=False):
+    """Save the simulation results to the mountainclimbers R package."""
+    cmd = 'cd {R_pkg} && Rscript data-raw/use-data.R'
+    ctx.run(cmd.format(R_pkg=R_PKG), echo=verbose)
 
 
 @task(help={'clear-cache': 'Clear knitr cache and figs before rendering.',

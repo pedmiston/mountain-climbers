@@ -1,18 +1,18 @@
-get_experiment_data <- function(experiment) {
-  file.path("experiments", paste0(experiment, ".csv")) %>%
-    read_csv() %>%
-    recode_fitness_as_pct() %>%
-    mutate(sim_id = paste(exp_id, sim_id, sep = ":"))
-}
-
+#' Recode arbitrary fitness value into a percentage of max.
+#' @import dplyr
+#' @export
 recode_fitness_as_pct <- function(frame) {
   mutate(frame, fitness_pct = 1 - fitness/min(fitness))
 }
 
+
+#' Extract position coordinates from json string.
+#' @import dplyr
+#' @export
 extract_position <- function(frame) {
   pos <- map(frame$pos, jsonlite::fromJSON)
   get_coord <- function(n) {
-    map(pos, function(x) x[[n]]) %>%
+    purrr::map(pos, function(x) x[[n]]) %>%
       unlist()
   }
   frame$pos_x <- get_coord(1)
@@ -20,9 +20,13 @@ extract_position <- function(frame) {
   frame
 }
 
+
+#' Recode team variable for plotting in order.
+#' @import dplyr
+#' @export
 recode_team <- function(frame) {
   teams <- get_team_info(frame)
-  
+
   # Order teams from most disjoint to least
   team_levels <- letters[5:1]
   team_map <- teams %>%
@@ -34,13 +38,17 @@ recode_team <- function(frame) {
       team_label_rev = factor(team_id, levels = rev(team_levels),
                               labels = 0:4)
     )
-  
+
   left_join(frame, team_map)
 }
 
+
+#' Extract team information from json string of team attributes
+#' @import dplyr
+#' @export
 get_team_info <- function(frame) {
   unique(frame$team) %>%
-    map(function(team) {
+    purrr::map(function(team) {
       data <- jsonlite::fromJSON(team)
       data$players %>%
         mutate(
@@ -52,6 +60,10 @@ get_team_info <- function(frame) {
     bind_rows()
 }
 
+
+#' Recode team strategy (diachronic or synchronic)
+#' @import dplyr
+#' @export
 recode_strategy <- function(frame) {
   strategies <- c("diachronic", "synchronic")
   strategy_map <- data_frame(

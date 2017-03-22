@@ -7,18 +7,33 @@ output:
     toc_depth: 1
 ---
 
-```{r, include=FALSE}
-source("R/base.R")
-source("R/helpers.R")
-source("R/theme.R")
+```{r config, include=FALSE}
+library(knitr)
+
+fig_width <- 6
+fig_height <- 4
+
+opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.path = "figs/",
+  fig.width = fig_width,
+  fig.height = fig_height,
+  cache = TRUE,
+  cache.path = ".cache/"
+)
+
+read_chunk("R/setup.R")
+```
+
+```{r setup, include=FALSE}
 ```
 
 # Identical teammates
 
 ```{r, fig.keep="last"}
-identical_team <- get_experiment_data("identical-team") %>%
-  extract_position() %>%
-  recode_strategy()
+data("identical_team")
 
 (gg_identical_team_timeline <- ggplot(identical_team) +
   aes(time, fitness_pct, color = strategy) +
@@ -52,7 +67,8 @@ max_fitness <- identical_team %>%
   theme(legend.position = "none",
         panel.grid.major.x = element_blank()))
 
-grid.arrange(gg_identical_team_timeline, gg_identical_team_final_fitness, nrow = 1)
+grid.arrange(gg_identical_team_timeline, 
+             gg_identical_team_final_fitness, nrow = 1)
 ```
 
 ```{r}
@@ -82,9 +98,7 @@ random_walk_plot
 # Differing skills
 
 ```{r, fig.width=10, fig.keep="last"}
-differing_skills <- get_experiment_data("differing-skills") %>%
-  recode_team() %>%
-  extract_position()
+data("differing_skills")
 
 (gg_differing_skills_timeline <- ggplot(differing_skills) +
   aes(time, fitness_pct, alpha = team_label, color = strategy) +
@@ -130,8 +144,7 @@ grid.arrange(gg_differing_skills_timeline,
 # Solo teams
 
 ```{r, fig.keep="last", fig.width=10}
-solo_teams <- get_experiment_data("solo-teams") %>%
-  recode_team()
+data("solo_teams")
 
 (gg_solo_teams_timeline <- ggplot(solo_teams) +
     aes(time, fitness_pct, alpha = team_label, color = strategy) +
@@ -156,16 +169,7 @@ grid.arrange(gg_solo_teams_timeline, gg_solo_teams_final_fitness, nrow = 1)
 # Number of exchanges
 
 ```{r}
-exchange_rate_strategies <- c("diachronic", "diachronic_2", "diachronic_3", "diachronic_4", "diachronic_max")
-exchange_rate_labels <- c(1:4, "max")
-exchange_rate_map <- data_frame(
-  strategy = exchange_rate_strategies,
-  exchange_rate = factor(exchange_rate_strategies, levels = exchange_rate_strategies,
-                         labels = exchange_rate_labels)
-)
-
-alternating <- get_experiment_data("alternating") %>%
-  left_join(exchange_rate_map)
+data("alternating")
 
 ggplot(alternating) +
   aes(time, fitness_pct, color = exchange_rate) +
@@ -179,8 +183,6 @@ ggplot(alternating) +
 # Aggregate functions
 
 ```{r}
-aggregate_fns <- get_experiment_data("aggregate-functions")
-
 ggplot(aggregate_fns) +
   aes(time, fitness_pct, color = aggregate_fn) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
@@ -193,8 +195,6 @@ ggplot(aggregate_fns) +
 # Variable feedback
 
 ```{r, fig.width = fig_width * 2}
-variable_feedback <- get_experiment_data("variable-feedback")
-
 feedback_trials_plot <- ggplot(variable_feedback) +
   aes(factor(strategy, levels = c("synchronic", "diachronic")), feedback, fill = strategy) +
   geom_bar(aes(alpha = factor(p_feedback, levels = c(0.1, 0.5, 1.0))),

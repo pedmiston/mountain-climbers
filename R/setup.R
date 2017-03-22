@@ -1,3 +1,13 @@
+# ---- setup
+library(tidyverse)
+library(plotly)
+library(magrittr)
+library(gridExtra)
+
+library(mountainclimbers)
+library(totems)
+library(crotchet)
+
 library(RColorBrewer)
 base_theme <- theme_minimal()
 
