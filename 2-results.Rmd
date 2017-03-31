@@ -182,11 +182,20 @@ grid.arrange(gg_solo_teams_timeline, gg_solo_teams_final_fitness, nrow = 1)
 
 # Number of exchanges
 
-```{r, eval=FALSE}
+```{r}
 data("alternating")
 
+exchange_rate_strategies <- c("diachronic", "diachronic_2", "diachronic_3", "diachronic_4", "diachronic_max")
+exchange_rate_labels <- c(1:4, "max")
+exchange_rate_map <- data_frame(
+  strategy = exchange_rate_strategies,
+  exchange_rate = factor(exchange_rate_strategies, levels = exchange_rate_strategies,
+                         labels = exchange_rate_labels)
+)
+
 alternating %<>%
-  recode_fitness_as_pct()
+  recode_fitness_as_pct() %>%
+  left_join(exchange_rate_map)
 
 ggplot(alternating) +
   aes(time, fitness_pct, color = exchange_rate) +
