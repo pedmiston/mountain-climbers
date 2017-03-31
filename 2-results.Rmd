@@ -20,7 +20,7 @@ opts_chunk$set(
   fig.path = "figs/",
   fig.width = fig_width,
   fig.height = fig_height,
-  cache = TRUE,
+  cache = FALSE,
   cache.path = ".cache/"
 )
 
@@ -34,6 +34,11 @@ read_chunk("R/setup.R")
 
 ```{r, fig.keep="last"}
 data("identical_team")
+
+identical_team %<>%
+  recode_fitness_as_pct() %>%
+  recode_strategy() %>%
+  extract_position()
 
 (gg_identical_team_timeline <- ggplot(identical_team) +
   aes(time, fitness_pct, color = strategy) +
@@ -100,6 +105,11 @@ random_walk_plot
 ```{r, fig.width=10, fig.keep="last"}
 data("differing_skills")
 
+differing_skills %<>%
+  recode_fitness_as_pct() %>%
+  recode_team() %>%
+  extract_position()
+
 (gg_differing_skills_timeline <- ggplot(differing_skills) +
   aes(time, fitness_pct, alpha = team_label, color = strategy) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
@@ -146,6 +156,10 @@ grid.arrange(gg_differing_skills_timeline,
 ```{r, fig.keep="last", fig.width=10}
 data("solo_teams")
 
+solo_teams %<>%
+  recode_fitness_as_pct() %>%
+  recode_team()
+
 (gg_solo_teams_timeline <- ggplot(solo_teams) +
     aes(time, fitness_pct, alpha = team_label, color = strategy) +
     geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
@@ -168,8 +182,11 @@ grid.arrange(gg_solo_teams_timeline, gg_solo_teams_final_fitness, nrow = 1)
 
 # Number of exchanges
 
-```{r}
+```{r, eval=FALSE}
 data("alternating")
+
+alternating %<>%
+  recode_fitness_as_pct()
 
 ggplot(alternating) +
   aes(time, fitness_pct, color = exchange_rate) +
@@ -183,7 +200,12 @@ ggplot(alternating) +
 # Aggregate functions
 
 ```{r}
-ggplot(aggregate_fns) +
+data("aggregate_functions")
+
+aggregate_functions %<>%
+  recode_fitness_as_pct()
+
+ggplot(aggregate_functions) +
   aes(time, fitness_pct, color = aggregate_fn) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
@@ -195,6 +217,11 @@ ggplot(aggregate_fns) +
 # Variable feedback
 
 ```{r, fig.width = fig_width * 2}
+data("variable_feedback")
+
+variable_feedback %<>%
+  recode_fitness_as_pct()
+
 feedback_trials_plot <- ggplot(variable_feedback) +
   aes(factor(strategy, levels = c("synchronic", "diachronic")), feedback, fill = strategy) +
   geom_bar(aes(alpha = factor(p_feedback, levels = c(0.1, 0.5, 1.0))),

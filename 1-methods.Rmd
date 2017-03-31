@@ -7,16 +7,33 @@ output:
     toc_depth: 1
 ---
 
-```{r, include=FALSE}
-source("R/base.R")
-source("R/helpers.R")
-source("R/theme.R")
+```{r config, include=FALSE}
+library(knitr)
+
+fig_width <- 6
+fig_height <- 4
+
+opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.path = "figs/",
+  fig.width = fig_width,
+  fig.height = fig_height,
+  cache = FALSE,
+  cache.path = ".cache/"
+)
+
+read_chunk("R/setup.R")
+```
+
+```{r setup, include=FALSE}
 ```
 
 # Team structures
 
 ```{r team-structures, fig.width=2}
-diagram_graphviz("team-structures", package = "evoteams")
+diagram_graphviz("team-structures", package = "totems")
 ```
 
 # Labor hours and calendar hours
@@ -69,7 +86,9 @@ ability <- data_frame(vision = 1:9)
   ggtitle("Vision in a single dimension")
 )
 
-teams <- get_experiment_data("differing-skills") %>%
+data("differing_skills")
+
+teams <- differing_skills %>%
   get_team_info() %>%
   gather(dimension, value, -c(team, player, team_id)) %>%
   recode_team() %>%

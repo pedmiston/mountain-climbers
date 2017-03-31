@@ -4,8 +4,8 @@ library(plotly)
 library(magrittr)
 library(gridExtra)
 
-library(mountainclimbers)
 library(totems)
+library(mountainclimbers)
 library(crotchet)
 
 library(RColorBrewer)

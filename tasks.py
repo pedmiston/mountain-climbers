@@ -19,14 +19,14 @@ def run(ctx, experiment):
     be searched for in the experiments directory. To list available
     experiments, pass '?' (a question mark) as the first argument. Experiments
     in this directory can be run by the stem name of the file. To run all the
-    available experiments, pass 'all'.  
+    available experiments, pass 'all'.
 
         $ inv run path/to/my/exp-1.yaml  # run a single experiment
-        $ inv run ?                      # list experiments in "experiments/"
+        $ inv run list                   # list experiments in "experiments/"
         $ inv run exp-1                  # run "experiments/exp-1.yaml"
         $ inv run all                    # run all available experiments
     """
-    if experiment == '?':
+    if experiment == 'list':
         print('Experiments:')
         for experiment in Path('experiments').listdir('*.yaml'):
             print(' - ' + experiment.stem)
@@ -47,7 +47,7 @@ def run(ctx, experiment):
 
 
 @task
-def install(ctx, verbose=False, use_data=False):
+def install(ctx, verbose=False, use_data_too=False):
     """Install the mountainclimbers R package."""
     cmd = 'cd {R_pkg} && Rscript -e "{R_cmd}"'
     R_cmds = """\
@@ -56,7 +56,7 @@ def install(ctx, verbose=False, use_data=False):
     install()
     """
 
-    if use_data:
+    if use_data_too:
         use_data(ctx, verbose=verbose)
 
     ctx.run(cmd.format(R_pkg=R_PKG, R_cmd=';'.join(R_cmds.split())),
