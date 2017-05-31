@@ -209,12 +209,12 @@ ggplot(alternating) +
 # Aggregate functions
 
 ```{r}
-data("aggregate_functions")
+data("aggregate_fns")
 
-aggregate_functions %<>%
+aggregate_fns %<>%
   recode_fitness_as_pct()
 
-ggplot(aggregate_functions) +
+ggplot(aggregate_fns) +
   aes(time, fitness_pct, color = aggregate_fn) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
