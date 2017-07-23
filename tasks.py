@@ -111,5 +111,5 @@ def report(ctx, name, clear_cache=False, open_after=False, skip_prereqs=False):
         ctx.run(render_cmd.format(report))
 
         if open_after:
-            output = Path(output_dir, report.stem + '.html')
+            output = Path(report.parent, report.stem + '.html')
             ctx.run('open {}'.format(output))
