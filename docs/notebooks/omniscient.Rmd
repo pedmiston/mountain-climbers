@@ -1,0 +1,63 @@
+---
+title: "Omniscient mountain climbers"
+output:
+  html_document:
+    theme: flatly
+---
+
+```{r config, include=FALSE}
+sapply(list.files("../R", "*.R", full.names = TRUE), knitr::read_chunk)
+```
+
+```{r setup, include=FALSE}
+```
+
+```{r omniscient}
+data("omniscient")
+
+omniscient %<>%
+  recode_fitness_as_pct() %>%
+  recode_strategy() %>%
+  extract_position() %>%
+  mutate(omniscient_label = factor(omniscient,
+                                   levels = c(0, 1),
+                                   labels = c("Guessing", "Omniscient")))
+
+gg_omniscient_team_timeline <- ggplot(omniscient) +
+  aes(time, fitness_pct, color = strategy, linetype = omniscient_label,
+      group = interaction(strategy, omniscient_label)) +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_manual(
+    "strategy",
+    labels = c("diachronic", "synchronic"),
+    values = get_theme_color_values(c("blue", "green")),
+    guide = guide_legend(reverse = TRUE)
+  ) +
+  base_theme +
+  theme(legend.position = "top")
+
+max_fitness <- omniscient %>%
+  group_by(sim_id, strategy, omniscient_label) %>%
+  summarize(fitness_pct = max(fitness_pct)) %>%
+  recode_strategy()
+
+gg_omniscient_team_final_fitness <- ggplot(max_fitness) +
+  aes(strategy_rev, fitness_pct) +
+  geom_bar(aes(fill = strategy, alpha = omniscient_label),
+           stat = "summary", fun.y = "mean", position = "dodge") +
+  geom_point(aes(color = strategy, group = omniscient_label), alpha = 0.2,
+             position = position_jitterdodge(jitter.width = 0.2, jitter.height = 0.0,
+                                             dodge.width = 0.8)) +
+  scale_x_strategy_rev +
+  scale_y_fitness_pct +
+  scale_color_manual(values = get_theme_color_values(c("blue", "green"))) +
+  scale_fill_manual(values = get_theme_color_values(c("blue", "green"))) +
+  scale_alpha_manual(values = c(0.4, 0.8)) +
+  base_theme +
+  theme(panel.grid.major.x = element_blank())
+
+grid.arrange(gg_omniscient_team_timeline,
+             gg_omniscient_team_final_fitness, nrow = 1)
+```
