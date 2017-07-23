@@ -14,12 +14,15 @@ class Team:
     @classmethod
     def from_player_attributes(cls, *player_attributes, **kwargs):
         """Create players before adding them to a team."""
-        players = [Player(**attributes) for attributes in player_attributes]
+        omniscient = kwargs.pop('omniscient', False)
+        players = [Player(omniscient=omniscient, **attributes)
+                          for attributes in player_attributes]
         return cls(players, **kwargs)
 
-    def new_pos(self, aggregate_fn='sum'):
+    def new_pos(self, aggregate_fn='sum', landscape=None):
         """Generate a new position from current position and player deltas."""
-        deltas = [player.delta() for player in self.active_players]
+        deltas = [player.delta(landscape, self.pos)
+                  for player in self.active_players]
         try:
             agg_delta = getattr(numpy.array(deltas), aggregate_fn)(axis=0)
         except Exception as err:
@@ -78,7 +81,7 @@ class Player:
                 raise OmniscientWithoutLandscape
             if starting_pos is None:
                 raise OmniscientWithoutStartingPos
-            return landscape.pick_best(starting_pos, self.sight_x, self.sight_y)
+            return landscape.pick_best(starting_pos, self.vision_x, self.vision_y)
 
         return (self.pick_one(self.sight_x), self.pick_one(self.sight_y))
 

@@ -1,4 +1,5 @@
 import numpy
+from functools import lru_cache
 
 from .vision import calculate_field_of_vision
 
@@ -7,6 +8,7 @@ class Landscape:
     def __init__(self, fitness_fn):
         self.fitness_fn = fitness_fn
 
+    @lru_cache(maxsize=1000)
     def evaluate(self, pos):
         return self.fitness_fn(pos)
 
@@ -17,15 +19,16 @@ class Landscape:
                                                     vision_x, vision_y)
 
         top_pos = starting_pos
-        top_fitness = self.evaluate(starting_pos)
+        top_fitness = self.evaluate(tuple(starting_pos))
 
         for new_pos in field_of_vision:
-            new_fitness = self.evaluate(new_pos)
+            new_fitness = self.evaluate(tuple(new_pos))
             if new_fitness > top_fitness:
                 top_pos = new_pos
                 top_fitness = new_fitness
 
         return new_pos
+
 
 class SimpleHill(Landscape):
     def __init__(self, center = (0, 0)):
