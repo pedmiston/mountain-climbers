@@ -9,10 +9,10 @@ def test_player_sight(team):
 
 def test_strategy_modifies_team(team):
     team.active_players = []
-    next(peaks.strategies.synchronic(1, team))
+    next(peaks.strategies.synchronic(2, team))
     assert len(team.active_players) == 2
 
-    next(peaks.strategies.diachronic(1, team))
+    next(peaks.strategies.diachronic(2, team))
     assert len(team.active_players) == 1
 
 def test_player_deltas_are_reproducibly_random():
@@ -48,4 +48,3 @@ def test_team_deltas_are_reproducibly_random():
 
     next_steps = [team.new_pos() for _ in range(n_steps)]
     assert next_steps != orig_deltas
-

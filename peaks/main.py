@@ -122,6 +122,9 @@ class Experiment:
     def team(self):
         """Return a list of Teams created from Player attributes."""
         teams = []
+        # player_attributes is a list of dicts containing player info.
+        # To allow default player options, first set each player to the
+        # defaults and update with the player attributes.
         for name, player_attributes in self._data['teams'].items():
             teams.append(Team.from_player_attributes(*player_attributes,
                                                      name=name))
@@ -134,6 +137,10 @@ class Experiment:
     @property
     def p_feedback(self):
         return self.get_as_list('prob_feedback', 1.0)
+
+    @property
+    def omniscient(self):
+        return self.get_as_list('omniscient', False)
 
     def get_as_list(self, key, default=None):
         data = self._data.get(key, default)
@@ -187,6 +194,7 @@ class Simulator:
                 feedback=int(feedback_trial),
                 pos=json.dumps(s.team.pos),
                 fitness=float(fitness),
+                omniscient=int(s.omniscient)
             ))
 
         return pandas.DataFrame.from_records(results, columns=self.data_cols)

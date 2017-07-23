@@ -9,6 +9,7 @@ p_feedback
 labor_hours
 starting_pos
 seed
+omniscient
 """.splitlines())
 
 Result = namedtuple('Result', """\
