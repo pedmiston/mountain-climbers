@@ -76,8 +76,7 @@ def use_data(ctx, verbose=False):
 def report(ctx, name, clear_cache=False, open_after=False, skip_prereqs=False):
     """Compile dynamic reports from the results of the experiments."""
     report_dir = Path('docs')
-    output_dir = Path('docs')
-    
+
     all_reports = [Path(report) for report in
                    glob(Path(report_dir, '**/*.Rmd'), recursive=True)
                    if Path(report).isfile()]
@@ -102,12 +101,14 @@ def report(ctx, name, clear_cache=False, open_after=False, skip_prereqs=False):
     if not skip_prereqs:
         ctx.run('Rscript -e "devtools::install_github(\'pedmiston/crotchet\')"')
 
-    if clear_cache:
-        ctx.run('rm -rf .cache/ figs/')
-
-    render_cmd = 'Rscript -e "rmarkdown::render(\'{}\', output_dir=\'{}\')"'
+    render_cmd = 'Rscript -e "rmarkdown::render(\'{}\')"'
     for report in reports:
-        ctx.run(render_cmd.format(report, output_dir))
+        if clear_cache:
+            ctx.run('rm -rf {p}/{n}*cache/ {p}/{n}*figs/'.format(
+                        p=report.parent, n=name
+                    ), echo=True)
+
+        ctx.run(render_cmd.format(report))
 
         if open_after:
             output = Path(output_dir, report.stem + '.html')
