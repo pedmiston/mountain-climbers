@@ -1,4 +1,5 @@
 import sys
+from glob import glob
 
 import yaml
 from invoke import task
@@ -74,22 +75,29 @@ def use_data(ctx, verbose=False):
             'skip-prereqs': 'Don\'t try to update custom prereqs.'})
 def report(ctx, name, clear_cache=False, open_after=False, skip_prereqs=False):
     """Compile dynamic reports from the results of the experiments."""
-    report_dir = Path('.')
-    output_dir = Path('reports')
+    report_dir = Path('docs')
+    output_dir = Path('docs')
+    
+    all_reports = [Path(report) for report in
+                   glob(Path(report_dir, '**/*.Rmd'), recursive=True)
+                   if Path(report).isfile()]
 
-    if name == '?':
+    if name == 'list':
         print('Reports:')
-        for report in report_dir.listdir('*.Rmd'):
+        for report in all_reports:
             print(' - ' + report.stem)
         return
     elif name == 'all':
-        reports = report_dir.listdir('*.Rmd')
+        reports = all_reports
     elif Path(name).exists():
         reports = [name]
     else:
-        report = Path(report_dir, name + '.Rmd')
-        assert report.exists(), 'report %s not found' % report
-        reports = [report]
+        for report in all_reports:
+            if report.stem == name:
+                reports = [report]
+                break
+        else:
+            raise AssertionError('Report "{}" not found'.format(name))
 
     if not skip_prereqs:
         ctx.run('Rscript -e "devtools::install_github(\'pedmiston/crotchet\')"')
