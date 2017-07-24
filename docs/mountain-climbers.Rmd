@@ -1,5 +1,6 @@
 ---
-title: "Mountain climbers"
+title: "Mountain climbers: Teams of hill-climbing problem solvers"
+author: "Pierce Edmiston"
 output:
   html_document:
     theme: flatly
@@ -9,6 +10,7 @@ output:
 
 ```{r config, include=FALSE}
 library(knitr)
+library(crotchet)
 
 fig_width <- 6
 fig_height <- 4
@@ -17,6 +19,7 @@ opts_chunk$set(
   echo = FALSE,
   message = FALSE,
   warning = FALSE,
+  results = "hide",
   fig.path = "figs/",
   fig.width = fig_width,
   fig.height = fig_height,
@@ -25,55 +28,36 @@ opts_chunk$set(
 )
 
 sapply(list.files("R", "*.R", full.names = TRUE), read_chunk)
+sapply(list.files("gv", "*.gv", full.names = TRUE), read_graphviz_chunk)
 ```
 
 ```{r setup, include=FALSE}
 ```
 
-# Methods
-
-## Team structures
-
 ```{r team-structures, fig.width=2}
-diagram_graphviz("team-structures", package = "totems")
+draw_graphviz("team-structures", package = "totems")
 ```
 
-## Labor hours and calendar hours
+```{r guessing-strategies, engine="dot", fig.width=5}
+```
 
-```{r time-plot, fig.width=4, fig.height=4}
-diachronic <- data_frame(
-  strategy = "diachronic",
-  calendar_hours = 0:100,
-  labor_hours = calendar_hours
-)
+# Methods
 
-synchronic <- data_frame(
-  strategy = "synchronic",
-  calendar_hours = 0:50,
-  labor_hours = calendar_hours * 2
-)
+## Landscapes
 
-time <- rbind(diachronic, synchronic)
-
-axis_breaks <- c(0, 50, 100)
-axis_labels <- axis_breaks
-
-(gg_time <- ggplot(time, aes(calendar_hours, labor_hours)) +
-  geom_line(aes(color = strategy), size = 1.2) +
-  scale_x_continuous("calendar hours", breaks = axis_breaks, labels = axis_labels) +
-  scale_y_continuous("labor hours", breaks = axis_breaks, labels = axis_labels) +
-  scale_color_strategy +
-  guides(color = guide_legend(reverse = TRUE)) +
-  base_theme +
-  theme(legend.position = "top"))
+```{r simple-hill}
+limits <- seq(-100, 100, by = 10)
+z <- expand.grid(x = limits, y = limits) %>%
+     mutate(z = -x^2 - y^2)
+lattice::wireframe(z ~ x * y, data = z)
 ```
 
 ## Ability as vision
 
-```{r, fig.keep='last', fig.width=6, fig.height=6}
+```{r, fig.width=6, fig.height=6}
 ability <- data_frame(vision = 1:9)
 
-(gg_single_dimension <- ggplot(ability) +
+gg_single_dimension <- ggplot(ability) +
   aes(vision, vision) +
   geom_bar(aes(alpha = vision), stat = "identity", fill = theme_colors[["blue"]]) +
   scale_x_continuous("", breaks = NULL) +
@@ -86,7 +70,7 @@ ability <- data_frame(vision = 1:9)
     panel.grid.minor.y = element_blank()
   ) +
   ggtitle("Vision in a single dimension")
-)
+
 
 data("differing_skills")
 
@@ -126,13 +110,13 @@ tradeoffs_plot <- ggplot() +
     panel.grid.minor.y = element_blank()
   )
 
-(gg_two_dimensions <- (tradeoffs_plot %+% filter(teams, player == 1)) +
+gg_two_dimensions <- (tradeoffs_plot %+% filter(teams, player == 1)) +
   scale_x_continuous("", labels = NULL) +
   theme(strip.text = element_blank()) +
-  labs(title = "Vision in two dimensions"))
+  labs(title = "Vision in two dimensions")
 
-(gg_differing_skills <- (tradeoffs_plot %+% teams) +
-  labs(title = "Two person teams varying in vision distribution"))
+gg_differing_skills <- (tradeoffs_plot %+% teams) +
+  labs(title = "Two person teams varying in vision distribution")
 
 grid.arrange(
   arrangeGrob(gg_single_dimension, gg_two_dimensions, nrow = 1),
@@ -211,23 +195,7 @@ ggplot(search_areas_by_strategy) +
   base_theme
 ```
 
-## Landscapes
-
-### Simple hill
-
-```{r simple-hill}
-limits <- -100:100
-z <- expand.grid(x = limits, y = limits) %>%
-  mutate(z = -x^2 - y^2) %>%
-  spread(y, z)
-z$x <- NULL  # bug! dplyr::select(-x) doesn't work
-z <- as.matrix(z)
-
-plot_ly(x = limits, y = limits, z = z) %>%
-  add_surface()
-```
-
-# Results
+# Experiment 1: Random walks
 
 ## Identical teammates
 
@@ -239,7 +207,7 @@ identical_team %<>%
   recode_strategy() %>%
   extract_position()
 
-(gg_identical_team_timeline <- ggplot(identical_team) +
+gg_identical_team_timeline <- ggplot(identical_team) +
   aes(time, fitness_pct, color = strategy) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
@@ -251,7 +219,7 @@ identical_team %<>%
     guide = guide_legend(reverse = TRUE)
   ) +
   base_theme +
-  theme(legend.position = "top"))
+  theme(legend.position = "top")
 
 max_fitness <- identical_team %>%
   group_by(sim_id, strategy) %>%
