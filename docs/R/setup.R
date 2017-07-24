@@ -39,3 +39,33 @@ scale_alpha_team <- scale_alpha_discrete(
 
 scale_y_fitness_pct <- scale_y_continuous("fitness", labels = scales::percent)
 scale_x_strategy_rev <- scale_x_discrete("strategy", labels = c("synchronic", "diachronic"))
+
+
+# Vision of 1 gives a visible range of 3 (from -1 to 1)
+visible_range <- function(vision) -vision:vision
+
+# Vision in two dimensions is a search area
+calculate_player_search_area <- function(vision_x, vision_y) {
+  expand.grid(x = visible_range(vision_x),
+              y = visible_range(vision_y)) %>%
+    mutate(vision_x = vision_x, vision_y = vision_y) %>%
+    select(vision_x, vision_y, x, y)
+}
+
+calculate_team_search_area <- function(p1_vision_x, p1_vision_y,
+                                       p2_vision_x, p2_vision_y) {
+  expand.grid(
+    p1_x = visible_range(p1_vision_x),
+    p1_y = visible_range(p1_vision_y),
+    p2_x = visible_range(p2_vision_x),
+    p2_y = visible_range(p2_vision_y)
+  ) %>% mutate(
+    p1_vision_x = p1_vision_x,
+    p1_vision_y = p1_vision_y,
+    p2_vision_x = p2_vision_x,
+    p2_vision_y = p2_vision_y,
+    x = p1_x + p2_x,
+    y = p1_y + p2_y
+  ) %>%
+    select(p1_vision_x, p1_vision_y, p2_vision_x, p2_vision_y, x, y)
+}

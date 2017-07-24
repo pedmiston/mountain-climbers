@@ -1,5 +1,5 @@
 ---
-title: Vision as skill
+title: Ability as vision
 output:
   html_document:
     theme: flatly
@@ -13,26 +13,33 @@ sapply(list.files("../R", "*.R", full.names = TRUE), knitr::read_chunk)
 ```{r setup, include=FALSE}
 ```
 
-## Ability as vision
+# Landscape
 
-```{r, fig.width=6, fig.height=6}
+```{r simple-hill}
+limits <- seq(-100, 100, by = 10)
+z <- expand.grid(x = limits, y = limits) %>%
+     mutate(z = -x^2 - y^2)
+lattice::wireframe(z ~ x * y, data = z)
+```
+
+# Player vision
+
+```{r player-vision, fig.width=11, fig.height=6}
+# Vision in a single dimension
 ability <- data_frame(vision = 1:9)
-
 gg_single_dimension <- ggplot(ability) +
   aes(vision, vision) +
   geom_bar(aes(alpha = vision), stat = "identity", fill = theme_colors[["blue"]]) +
   scale_x_continuous("", breaks = NULL) +
-  scale_y_continuous("vision", breaks = 1:9) +
+  scale_y_continuous("vision", breaks = 1:10, expand = c(0, 0)) +
   scale_alpha_continuous(range = c(0.5, 1.0)) +
   guides(alpha = "none") +
-  coord_cartesian(xlim = c(1, 9.2), ylim = c(0, 9.6)) +
+  coord_cartesian(xlim = c(1, 9.2), ylim = c(0, 9)) +
   base_theme +
-  theme(
-    panel.grid.minor.y = element_blank()
-  ) +
+  theme(panel.grid.minor.y = element_blank()) +
   ggtitle("Vision in a single dimension")
 
-
+# Vision in two dimensions
 data("differing_skills")
 
 teams <- differing_skills %>%
@@ -76,150 +83,121 @@ gg_two_dimensions <- (tradeoffs_plot %+% filter(teams, player == 1)) +
   theme(strip.text = element_blank()) +
   labs(title = "Vision in two dimensions")
 
-gg_differing_skills <- (tradeoffs_plot %+% teams) +
-  labs(title = "Two person teams varying in vision distribution")
+# Player search areas
+player_abilities <- data_frame(vision_x = 5:1, vision_y = 5:9) %>%
+  mutate(vision = sprintf("(%s,%s)", vision_x, vision_y),
+         vision = factor(vision, levels = vision))
 
-grid.arrange(
-  arrangeGrob(gg_single_dimension, gg_two_dimensions, nrow = 1),
-  gg_differing_skills,
-  ncol = 1
-)
-```
-
-## Vision and search areas
-
-```{r, fig.width=8, fig.height=2}
-# Vision of 1 gives a visible range of 3 (from -1 to 1)
-visible_range <- function(vision) -vision:vision
-
-# Vision in two dimensions is a search area
-calculate_player_search_area <- function(vision_x, vision_y) {
-  expand.grid(x = visible_range(vision_x),
-              y = visible_range(vision_y))
-}
-
-player_search_areas <- data_frame(vision_x = 5:1, vision_y = 5:9) %>%
+player_search_areas <- player_abilities %>%
   rowwise() %>%
-  do({
-    areas <- calculate_player_search_area(.$vision_x, .$vision_y)
-    areas[,c("vision_x", "vision_y")] <- c(.$vision_x, .$vision_y)
-    areas$vision <- paste0("(", .$vision_x, ",", .$vision_y, ")")
-    select(areas, vision, vision_x, vision_y, x, y)
-  }) %>%
+  do(calculate_player_search_area(.$vision_x, .$vision_y)) %>%
   ungroup() %>%
-  mutate(
-    # Technically these aren't teams
-    team_label = factor(vision, levels = paste0("(", 5:1, ",", 5:9, ")"), labels = 0:4),
-    team_label_rev = factor(vision, levels = rev(paste0("(", 5:1, ",", 5:9, ")")), labels = 0:4),
-    centroid = ifelse(x == 0 & y == 0, TRUE, FALSE),
-    pct_n = 1/n()
-  )
+  left_join(player_abilities) %>%
+  mutate(centroid = ifelse(x == 0 & y == 0, TRUE, FALSE))
 
-player_search_areas_plot <- ggplot(player_search_areas) +
-  aes(x = x, y = y, width = 0.9, height = 0.9,
-      fill = team_label_rev) +
-  geom_tile(aes(alpha = pct_n)) +
+gg_player_search_areas_plot <- ggplot(player_search_areas) +
+  aes(x = x, y = y, fill = vision) +
+  geom_tile(aes(alpha = centroid), height = 0.9, width = 0.9) +
   scale_x_continuous("vision x", labels = NULL) +
-  scale_y_continuous("vision y", labels = NULL) +
+  scale_y_continuous("vision y", labels = NULL, expand = c(0, 0)) +
   scale_fill_brewer(palette = "Set2", guide = "none") +
-  scale_alpha_continuous(range = c(0.2, 1.0), guide = "none") +
+  scale_alpha_manual(values = c(1.0, 0.4), guide = "none") +
   coord_cartesian(xlim = c(-10, 10), ylim = c(-10, 10)) +
-  facet_wrap("team_label_rev", nrow = 1, scales = "fixed") +
+  facet_wrap("vision", nrow = 1, scales = "fixed") +
   base_theme +
   theme(
     strip.text = element_blank(),
     panel.grid = element_blank()
   )
 
+# Number of search squares
+n_search_squares <- player_search_areas %>%
+  group_by(vision_x, vision_y, vision) %>%
+  summarize(n_search_squares = n()) %>%
+  ungroup()
 
-calculate_team_search_area <- function(p1_vision_x, p1_vision_y,
-                                       p2_vision_x, p2_vision_y) {
-  expand.grid(
-    p1_x = visible_range(p1_vision_x),
-    p1_y = visible_range(p1_vision_y),
-    p2_x = visible_range(p2_vision_x),
-    p2_y = visible_range(p2_vision_y)
-  ) %>% mutate(
-    x = p1_x + p2_x,
-    y = p1_y + p2_y
-  ) %>%
-    select(x, y)
-}
+gg_n_search_squares <- ggplot(n_search_squares) +
+  aes(vision, n_search_squares, fill = vision) +
+  geom_bar(stat = "identity") +
+  scale_x_discrete("", breaks = NULL) +
+  scale_y_continuous("n search squares", expand = c(0, 0)) +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  base_theme +
+  ggtitle("Number of search squares")
 
-team_search_areas <- data_frame(
+grid.arrange(
+  arrangeGrob(gg_single_dimension, gg_two_dimensions, gg_n_search_squares, nrow = 1),
+  gg_player_search_areas_plot,
+  ncol = 1
+)
+```
+
+# Team vision
+
+```{r team-vision, fig.width=11, fig.height=6}
+gg_differing_skills <- (tradeoffs_plot %+% teams) +
+  labs(title = "Two person teams varying in vision distribution") +
+  theme(strip.text = element_blank())
+
+# Team search areas
+team_abilities <- data_frame(
     p1_vision_x = 5:1,
     p1_vision_y = 5:9,
     p2_vision_x = 5:9,
     p2_vision_y = 5:1
   ) %>%
+  mutate(team_ability = sprintf("(%s,%s)+(%s,%s)", p1_vision_x, p1_vision_y,
+                                                   p2_vision_x, p2_vision_y),
+         team_ability = factor(team_ability, levels = team_ability))
+
+team_search_areas <- team_abilities %>%
   rowwise() %>%
-  do({
-    areas <- calculate_team_search_area(.$p1_vision_x, .$p1_vision_y,
-                                        .$p2_vision_x, .$p2_vision_y)
-    
-    areas$team_label <- sprintf("(%s,%s)+(%s,%s)",
-                                .$p1_vision_x, .$p1_vision_y, .$p2_vision_x, .$p2_vision_y)
-    
-    select(areas, team_label, x, y)
-  }) %>%
+  do(calculate_team_search_area(.$p1_vision_x, .$p1_vision_y,
+                                .$p2_vision_x, .$p2_vision_y)) %>%
   ungroup() %>%
-  mutate(team_label = factor(team_label, labels = 4:0),
-         team_label = factor(team_label, levels = 0:4)) %>%
-  count(team_label, x, y) %>%
-  group_by(team_label) %>%
+  left_join(team_abilities) %>%
+  count(team_ability, x, y) %>%
+  group_by(team_ability) %>%
   mutate(pct_n = n/n()) %>%
   ungroup()
 
-team_search_areas_plot <- ggplot(team_search_areas) +
-  aes(x = x, y = y, width = 0.9, height = 0.9,
-      fill = team_label, alpha = pct_n) +
-  geom_tile() +
+gg_team_search_areas <- ggplot(team_search_areas) +
+  aes(x = x, y = y, fill = team_ability, alpha = pct_n) +
+  geom_tile(width = 0.9, height = 0.9) +
   scale_x_continuous("vision x", labels = NULL) +
   scale_y_continuous("vision y", labels = NULL) +
   scale_fill_brewer(palette = "Set2", guide = "none") +
   scale_alpha_continuous(range = c(0.3, 1), guide = "none") +
   coord_cartesian(xlim = c(-10, 10), ylim = c(-10, 10)) +
-  facet_wrap("team_label", nrow = 1, scales = "fixed") +
+  facet_wrap("team_ability", nrow = 1, scales = "fixed") +
   base_theme +
   theme(
     strip.text = element_blank(),
     panel.grid = element_blank()
   )
 
-search_areas <- bind_rows(
-  player = select(player_search_areas, team_label, x, y),
-  team = team_search_areas,
-  .id = "search_area_type"
-)
+# team_search_areas %>%
+#   count(team_ability)
 
-ggplot(search_areas) +
-  aes(x = x, y = y, width = 0.9, height = 0.9,
-      fill = team_label, alpha = pct_n) +
-  geom_tile() +
-  scale_x_continuous("vision x", labels = NULL) +
-  scale_y_continuous("vision y", labels = NULL) +
-  scale_fill_brewer(palette = "Set2", guide = "none") +
-  scale_alpha_continuous(range = c(0.3, 1), guide = "none") +
-  coord_cartesian(xlim = c(-10, 10), ylim = c(-10, 10)) +
-  facet_grid(search_area_type ~ team_label) +
-  base_theme +
-  theme(
-    strip.text = element_blank(),
-    panel.grid = element_blank()
-  )
-```
+n_team_search_squares <- bind_rows(
+    n_search_squares,
+    list(vision = "all teams", n_search_squares = 441)
+  ) %>%
+  mutate(vision = factor(vision, levels = c(levels(player_abilities$vision), "all teams")))
 
-```{r}
-n_search_squares <- player_search_areas %>%
-  group_by(vision_x, vision_y, vision, team_label, team_label_rev) %>%
-  summarize(n_search_squares = n()) %>%
-  ungroup()
-
-ggplot(n_search_squares) +
-  aes(team_label, n_search_squares, fill = team_label) +
+gg_n_team_search_squares <- ggplot(n_team_search_squares) +
+  aes(vision, n_search_squares, fill = vision) +
   geom_bar(stat = "identity") +
-  scale_x_discrete("(vision x, vision y)") +
-  scale_y_continuous("n search squares") +
+  annotate("text", x = "all teams", y = 10, label = "all synchronic teams", angle = 90, hjust = 0) +
+  scale_x_discrete("", breaks = NULL) +
+  scale_y_continuous("n search squares", expand = c(0, 0)) +
   scale_fill_brewer(palette = "Set2", guide = "none") +
-  base_theme
+  base_theme +
+  ggtitle("Number of search squares")
+
+grid.arrange(
+  arrangeGrob(gg_differing_skills, gg_n_team_search_squares, widths = c(0.6, 0.4)),
+  gg_team_search_areas,
+  ncol = 1
+)
 ```
