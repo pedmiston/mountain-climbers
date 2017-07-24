@@ -128,6 +128,45 @@ ggplot(search_areas) +
     strip.text = element_blank(),
     panel.grid = element_blank()
   )
+
+# Isn't right
+# Have to find all pairwise comparisons
+# expand.grid vision_p1 and vision_p2
+synchronic_team_search_areas <- search_areas %>%
+  mutate(player = "p1") %>%
+  bind_rows(
+    data_frame(vision_x = 5:9, vision_y = 5:1) %>%
+      rowwise() %>%
+      do({
+        areas <- calculate_search_area(.$vision_x, .$vision_y)
+        areas[,c("vision_x", "vision_y")] <- c(.$vision_x, .$vision_y)
+        areas$vision <- paste0("(", .$vision_x, ",", .$vision_y, ")")
+        select(areas, vision, vision_x, vision_y, x, y)
+      }) %>%
+      ungroup() %>%
+      mutate(
+        team_label = factor(vision, levels = paste0("(", 5:9, ",", 5:1, ")"), labels = 0:4),
+        team_label_rev = factor(vision, levels = rev(paste0("(", 5:9, ",", 5:1, ")")), labels = 0:4),
+        centroid = ifelse(x == 0 & y == 0, TRUE, FALSE),
+        player = "p2"
+      )
+  )
+
+ggplot(synchronic_team_search_areas) +
+  aes(x = x, y = y, width = 0.9, height = 0.9,
+      fill = team_label_rev, alpha = player) +
+  geom_tile() +
+  scale_x_continuous("vision x", labels = NULL) +
+  scale_y_continuous("vision y", labels = NULL) +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  scale_alpha_manual(values = c(0.6, 0.9), guide = "none") +
+  coord_cartesian(xlim = c(-10, 10), ylim = c(-10, 10)) +
+  facet_wrap("team_label_rev", nrow = 1, scales = "fixed") +
+  base_theme +
+  theme(
+    strip.text = element_blank(),
+    panel.grid = element_blank()
+  )
 ```
 
 ```{r}
