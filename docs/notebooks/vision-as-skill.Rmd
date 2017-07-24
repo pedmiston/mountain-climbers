@@ -93,34 +93,36 @@ grid.arrange(
 visible_range <- function(vision) -vision:vision
 
 # Vision in two dimensions is a search area
-calculate_search_area <- function(vision_x, vision_y) {
+calculate_player_search_area <- function(vision_x, vision_y) {
   expand.grid(x = visible_range(vision_x),
               y = visible_range(vision_y))
 }
 
-search_areas <- data_frame(vision_x = 5:1, vision_y = 5:9) %>%
+player_search_areas <- data_frame(vision_x = 5:1, vision_y = 5:9) %>%
   rowwise() %>%
   do({
-    areas <- calculate_search_area(.$vision_x, .$vision_y)
+    areas <- calculate_player_search_area(.$vision_x, .$vision_y)
     areas[,c("vision_x", "vision_y")] <- c(.$vision_x, .$vision_y)
     areas$vision <- paste0("(", .$vision_x, ",", .$vision_y, ")")
     select(areas, vision, vision_x, vision_y, x, y)
   }) %>%
   ungroup() %>%
   mutate(
+    # Technically these aren't teams
     team_label = factor(vision, levels = paste0("(", 5:1, ",", 5:9, ")"), labels = 0:4),
     team_label_rev = factor(vision, levels = rev(paste0("(", 5:1, ",", 5:9, ")")), labels = 0:4),
-    centroid = ifelse(x == 0 & y == 0, TRUE, FALSE)
+    centroid = ifelse(x == 0 & y == 0, TRUE, FALSE),
+    pct_n = 1/n()
   )
 
-ggplot(search_areas) +
+player_search_areas_plot <- ggplot(player_search_areas) +
   aes(x = x, y = y, width = 0.9, height = 0.9,
       fill = team_label_rev) +
-  geom_tile(aes(alpha = centroid)) +
+  geom_tile(aes(alpha = pct_n)) +
   scale_x_continuous("vision x", labels = NULL) +
   scale_y_continuous("vision y", labels = NULL) +
   scale_fill_brewer(palette = "Set2", guide = "none") +
-  scale_alpha_manual(values = c(0.6, 0.9), guide = "none") +
+  scale_alpha_continuous(range = c(0.2, 1.0), guide = "none") +
   coord_cartesian(xlim = c(-10, 10), ylim = c(-10, 10)) +
   facet_wrap("team_label_rev", nrow = 1, scales = "fixed") +
   base_theme +
@@ -129,39 +131,77 @@ ggplot(search_areas) +
     panel.grid = element_blank()
   )
 
-# Isn't right
-# Have to find all pairwise comparisons
-# expand.grid vision_p1 and vision_p2
-synchronic_team_search_areas <- search_areas %>%
-  mutate(player = "p1") %>%
-  bind_rows(
-    data_frame(vision_x = 5:9, vision_y = 5:1) %>%
-      rowwise() %>%
-      do({
-        areas <- calculate_search_area(.$vision_x, .$vision_y)
-        areas[,c("vision_x", "vision_y")] <- c(.$vision_x, .$vision_y)
-        areas$vision <- paste0("(", .$vision_x, ",", .$vision_y, ")")
-        select(areas, vision, vision_x, vision_y, x, y)
-      }) %>%
-      ungroup() %>%
-      mutate(
-        team_label = factor(vision, levels = paste0("(", 5:9, ",", 5:1, ")"), labels = 0:4),
-        team_label_rev = factor(vision, levels = rev(paste0("(", 5:9, ",", 5:1, ")")), labels = 0:4),
-        centroid = ifelse(x == 0 & y == 0, TRUE, FALSE),
-        player = "p2"
-      )
-  )
 
-ggplot(synchronic_team_search_areas) +
+calculate_team_search_area <- function(p1_vision_x, p1_vision_y,
+                                       p2_vision_x, p2_vision_y) {
+  expand.grid(
+    p1_x = visible_range(p1_vision_x),
+    p1_y = visible_range(p1_vision_y),
+    p2_x = visible_range(p2_vision_x),
+    p2_y = visible_range(p2_vision_y)
+  ) %>% mutate(
+    x = p1_x + p2_x,
+    y = p1_y + p2_y
+  ) %>%
+    select(x, y)
+}
+
+team_search_areas <- data_frame(
+    p1_vision_x = 5:1,
+    p1_vision_y = 5:9,
+    p2_vision_x = 5:9,
+    p2_vision_y = 5:1
+  ) %>%
+  rowwise() %>%
+  do({
+    areas <- calculate_team_search_area(.$p1_vision_x, .$p1_vision_y,
+                                        .$p2_vision_x, .$p2_vision_y)
+    
+    areas$team_label <- sprintf("(%s,%s)+(%s,%s)",
+                                .$p1_vision_x, .$p1_vision_y, .$p2_vision_x, .$p2_vision_y)
+    
+    select(areas, team_label, x, y)
+  }) %>%
+  ungroup() %>%
+  mutate(team_label = factor(team_label, labels = 4:0),
+         team_label = factor(team_label, levels = 0:4)) %>%
+  count(team_label, x, y) %>%
+  group_by(team_label) %>%
+  mutate(pct_n = n/n()) %>%
+  ungroup()
+
+team_search_areas_plot <- ggplot(team_search_areas) +
   aes(x = x, y = y, width = 0.9, height = 0.9,
-      fill = team_label_rev, alpha = player) +
+      fill = team_label, alpha = pct_n) +
   geom_tile() +
   scale_x_continuous("vision x", labels = NULL) +
   scale_y_continuous("vision y", labels = NULL) +
   scale_fill_brewer(palette = "Set2", guide = "none") +
-  scale_alpha_manual(values = c(0.6, 0.9), guide = "none") +
+  scale_alpha_continuous(range = c(0.3, 1), guide = "none") +
   coord_cartesian(xlim = c(-10, 10), ylim = c(-10, 10)) +
-  facet_wrap("team_label_rev", nrow = 1, scales = "fixed") +
+  facet_wrap("team_label", nrow = 1, scales = "fixed") +
+  base_theme +
+  theme(
+    strip.text = element_blank(),
+    panel.grid = element_blank()
+  )
+
+search_areas <- bind_rows(
+  player = select(player_search_areas, team_label, x, y),
+  team = team_search_areas,
+  .id = "search_area_type"
+)
+
+ggplot(search_areas) +
+  aes(x = x, y = y, width = 0.9, height = 0.9,
+      fill = team_label, alpha = pct_n) +
+  geom_tile() +
+  scale_x_continuous("vision x", labels = NULL) +
+  scale_y_continuous("vision y", labels = NULL) +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  scale_alpha_continuous(range = c(0.3, 1), guide = "none") +
+  coord_cartesian(xlim = c(-10, 10), ylim = c(-10, 10)) +
+  facet_grid(search_area_type ~ team_label) +
   base_theme +
   theme(
     strip.text = element_blank(),
@@ -170,7 +210,7 @@ ggplot(synchronic_team_search_areas) +
 ```
 
 ```{r}
-n_search_squares <- search_areas %>%
+n_search_squares <- player_search_areas %>%
   group_by(vision_x, vision_y, vision, team_label, team_label_rev) %>%
   summarize(n_search_squares = n()) %>%
   ungroup()
