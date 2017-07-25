@@ -127,8 +127,7 @@ class Experiment:
         # defaults and update with the player attributes.
         for name, player_attributes in self._data['teams'].items():
             teams.append(Team.from_player_attributes(*player_attributes,
-                                                     name=name,
-                                                     omniscient=self.omniscient))
+                                                     name=name))
         return teams
 
     @property
@@ -161,12 +160,12 @@ class Simulator:
         s = self._sim
 
         rand = numpy.random.RandomState(s.seed)
-        fitness = s.landscape.evaluate(tuple(s.team.pos))
+        fitness = s.landscape.evaluate(*s.team.pos)
         results = []
 
         for calendar_hour in s.strategy(s.labor_hours, s.team):
             new_pos = s.team.new_pos(s.aggregate_fn, s.landscape)
-            new_fitness = s.landscape.evaluate(tuple(new_pos))
+            new_fitness = s.landscape.evaluate(*new_pos)
 
             feedback_trial = rand.choice([1, 0], p=[s.p_feedback, 1-s.p_feedback])
             if not feedback_trial:

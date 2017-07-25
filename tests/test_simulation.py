@@ -17,5 +17,5 @@ def test_run_simulation():
     assert ((starting_pos[0] == simulator._sim.starting_pos[0]) and
             (starting_pos[1] == simulator._sim.starting_pos[1]))
     simulator.run()
-    assert ((starting_pos[0] != simulator._sim.starting_pos[0]) and
-            (starting_pos[1] != simulator._sim.starting_pos[1]))
+    assert ((starting_pos[0] != simulator._sim.team.pos[0]) and
+            (starting_pos[1] != simulator._sim.team.pos[1]))
