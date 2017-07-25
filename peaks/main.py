@@ -200,6 +200,7 @@ class Simulator:
     def _prepare_team(self):
         self._sim.team.pos = list(self._sim.starting_pos)
         self._sim.team.set_seed(self._sim.seed)
+        self._sim.team.set_omniscience(self._sim.omniscient)
 
 
 

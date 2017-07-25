@@ -35,6 +35,10 @@ class Team:
         for player in self.players:
             player.set_seed(rand)
 
+    def set_omniscience(self, omniscient=False):
+        for player in self.players:
+            player.omniscient = omniscient
+
     def __str__(self):
         return json.dumps(dict(
             name=self.name,
