@@ -13,7 +13,7 @@ R_PKG = Path(PROJ, 'mountainclimbers')
 
 
 @task(help=dict(experiment='yaml file by path or stem name with no extension'))
-def run(ctx, experiment, output=None):
+def run(ctx, experiment):
     """Run an experiment in "experiments/" or from a config file.
 
     Run an experiment by passing in a path to a config file. Experiments will
@@ -42,12 +42,7 @@ def run(ctx, experiment, output=None):
         experiments = [experiment]
 
     for experiment in experiments:
-        if output is None:
-            output = Path(R_PKG, 'data-raw', experiment.stem+'.csv')
-        else:
-            assert len(experiments) == 1, \
-                "Can't write multiple experiments to the same output file."
-
+        output = Path(R_PKG, 'data-raw', experiment.stem+'.csv')
         print('Running experiment { %s }' % experiment.stem)
         peaks.run_experiment(experiment, output=output)
 
