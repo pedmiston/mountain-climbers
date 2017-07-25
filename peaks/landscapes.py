@@ -12,9 +12,9 @@ class Landscape:
     def evaluate(self, x, y):
         return self.fitness_fn(x, y)
 
-    def pick_best(self, starting_pos, vision_x, vision_y):
-        """Pick the highest point within a window."""
-        # Create a window of positions around the starting positions
+    def pick_best_delta(self, starting_pos, vision_x, vision_y):
+        """Pick the delta that gets to the highest point in the window."""
+        # Create a list of all positions around the starting position
         field_of_vision = calculate_field_of_vision(starting_pos,
                                                     vision_x, vision_y)
 
@@ -27,7 +27,9 @@ class Landscape:
                 top_pos = new_pos
                 top_fitness = new_fitness
 
-        return new_pos
+        delta = new_pos[0] - starting_pos[0], new_pos[1] - starting_pos[1]
+        assert abs(delta[0]) <= vision_x and abs(delta[1]) <= vision_y
+        return delta
 
 
 class SimpleHill(Landscape):

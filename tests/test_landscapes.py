@@ -8,7 +8,11 @@ def test_pick_best_location():
     starting_pos = (0, 0)
     vision_x = 5
     vision_y = 5
-    best_pos = landscape.pick_best(starting_pos, vision_x, vision_y)
+    best_pos = landscape.pick_best_delta(starting_pos, vision_x, vision_y)
+    assert best_pos == (5, 5)
+
+    starting_pos = (-5, -5)
+    best_pos = landscape.pick_best_delta(starting_pos, vision_x, vision_y)
     assert best_pos == (5, 5)
 
 

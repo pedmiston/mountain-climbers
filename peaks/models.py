@@ -85,7 +85,7 @@ class Player:
                 raise OmniscientWithoutLandscape
             if starting_pos is None:
                 raise OmniscientWithoutStartingPos
-            return landscape.pick_best(starting_pos, self.vision_x, self.vision_y)
+            return landscape.pick_best_delta(starting_pos, self.vision_x, self.vision_y)
 
         return (self.pick_one(self.sight_x), self.pick_one(self.sight_y))
 
