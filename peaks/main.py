@@ -157,13 +157,11 @@ class Simulator:
 
     def run(self):
         """Run a single simulation: a mountain climbing excursion."""
+        self._prepare_team()
         s = self._sim
+
         rand = numpy.random.RandomState(s.seed)
-
-        s.team.pos = list(s.starting_pos)
-        s.team.set_seed(s.seed)
         fitness = s.landscape.evaluate(tuple(s.team.pos))
-
         results = []
 
         for calendar_hour in s.strategy(s.labor_hours, s.team):
@@ -199,6 +197,11 @@ class Simulator:
             ))
 
         return pandas.DataFrame.from_records(results, columns=self.data_cols)
+
+    def _prepare_team(self):
+        self._sim.team.pos = list(self._sim.starting_pos)
+        self._sim.team.set_seed(self._sim.seed)
+
 
 
 def sample_equidistant_positions(radius, size, seed=None):
