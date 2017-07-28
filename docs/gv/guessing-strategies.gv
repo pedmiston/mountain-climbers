@@ -5,9 +5,8 @@ digraph {
   edge[arrowhead=vee];
   label = "Guessing efficiency";
   labelloc = t;
-  totally_random -> random_with_memory -> humans -> omniscient;
+  totally_random -> humans -> omniscient;
   totally_random[label="Random"];
-  random_with_memory[label="Random with memory"];
   humans[label="Humans?"];
   omniscient[label="Omniscient"];
 }
