@@ -36,11 +36,12 @@ sapply(list.files("gv", "*.gv", full.names = TRUE), read_graphviz_chunk)
 ```{r setup, include=FALSE}
 ```
 
-```{r team-structures, fig.width=2}
+```{r 04-team-structures, fig.width=2}
 draw_graphviz("team-structures", package = "totems")
 ```
 
 ```{r guessing-strategies, engine="dot", fig.width=5}
+draw_graphviz("guessing-stratgies", package = "mountainclimbers")
 ```
 
 # Methods
@@ -378,12 +379,12 @@ ggplot(alternating) +
 # Aggregate functions
 
 ```{r}
-data("aggregate_functions")
+data("aggregate_fns")
 
-aggregate_functions %<>%
+aggregate_fns %<>%
   recode_fitness_as_pct()
 
-ggplot(aggregate_functions) +
+ggplot(aggregate_fns) +
   aes(time, fitness_pct, color = aggregate_fn) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
