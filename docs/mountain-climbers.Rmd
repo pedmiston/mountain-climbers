@@ -33,7 +33,7 @@ sapply(list.files("R", "*.R", full.names = TRUE), read_chunk)
 sapply(list.files("gv", "*.gv", full.names = TRUE), read_graphviz_chunk)
 ```
 
-```{r setup, include=FALSE}
+```{r mountain-climbers-setup, include=FALSE}
 ```
 
 ```{r team-structures, fig.width=2}

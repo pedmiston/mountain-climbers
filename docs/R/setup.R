@@ -1,4 +1,4 @@
-# ---- setup
+# ---- mountain-climbers-setup
 library(tidyverse)
 library(plotly)
 library(magrittr)
