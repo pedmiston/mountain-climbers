@@ -29,8 +29,10 @@ opts_chunk$set(
   cache.path = "mountain-climbers-cache/"
 )
 
-sapply(list.files("R", "*.R", full.names = TRUE), read_chunk)
-sapply(list.files("gv", "*.gv", full.names = TRUE), read_graphviz_chunk)
+chunks_dir <- "R"
+sapply(list.files(chunks_dir, "*.R", full.names = TRUE), read_chunk)
+
+read_graphviz_chunk("guessing-strategies", "mountainclimbers")
 ```
 
 ```{r mountain-climbers-setup, include=FALSE}
@@ -40,8 +42,7 @@ sapply(list.files("gv", "*.gv", full.names = TRUE), read_graphviz_chunk)
 draw_graphviz("team-structures", package = "totems")
 ```
 
-```{r guessing-strategies, engine="dot", fig.width=5}
-draw_graphviz("guessing-stratgies", package = "mountainclimbers")
+```{r guessing-strategies, engine="dot", fig.width=5, cache=FALSE}
 ```
 
 # Methods
