@@ -18,7 +18,7 @@ def run(ctx, experiment):
 
     Run an experiment by passing in a path to a config file. Experiments will
     be searched for in the experiments directory. To list available
-    experiments, pass '?' (a question mark) as the first argument. Experiments
+    experiments, pass 'list' as the first argument. Experiments
     in this directory can be run by the stem name of the file. To run all the
     available experiments, pass 'all'.
 
