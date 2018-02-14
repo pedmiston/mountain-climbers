@@ -10,6 +10,8 @@ import peaks
 
 PROJ = Path(__file__).ancestor(2).absolute()
 R_PKG = Path(PROJ, 'data')
+BOTS = Path(PROJ, 'bots')
+EXPERIMENTS = Path(BOTS, 'experiments')
 
 
 @task(help=dict(experiment='yaml file by path or stem name with no extension'))
@@ -29,15 +31,15 @@ def run(ctx, experiment):
     """
     if experiment == 'list':
         print('Experiments:')
-        for experiment in Path('experiments').listdir('*.yaml'):
+        for experiment in EXPERIMENTS.listdir('*.yaml'):
             print(' - ' + experiment.stem)
         return
     elif experiment == 'all':
-        experiments = Path('experiments').listdir('*.yaml')
+        experiments = EXPERIMENTS.listdir('*.yaml')
     elif Path(experiment).exists():
         experiments = [Path(experiment)]
     else:
-        experiment = Path('experiments', experiment + '.yaml')
+        experiment = Path(EXPERIMENTS, experiment + '.yaml')
         assert experiment.exists(), 'experiment %s not found' % experiment
         experiments = [experiment]
 
