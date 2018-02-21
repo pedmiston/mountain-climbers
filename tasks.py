@@ -9,7 +9,7 @@ import peaks
 
 
 PROJ = Path(__file__).parent.absolute()
-R_PKG = Path(PROJ, 'mountainclimbers')
+R_PKG = Path(PROJ, 'data')
 
 
 @task(help=dict(experiment='yaml file by path or stem name with no extension'))
@@ -50,18 +50,10 @@ def run(ctx, experiment):
 @task
 def install(ctx, verbose=False, use_data_too=False):
     """Install the mountainclimbers R package."""
-    cmd = 'cd {R_pkg} && Rscript -e "{R_cmd}"'
-    R_cmds = """\
-    library(devtools)
-    document()
-    install()
-    """
-
     if use_data_too:
         use_data(ctx, verbose=verbose)
 
-    ctx.run(cmd.format(R_pkg=R_PKG, R_cmd=';'.join(R_cmds.split())),
-            echo=verbose)
+    ctx.run('./install.R', echo=verbose)
 
 @task
 def use_data(ctx, verbose=False):

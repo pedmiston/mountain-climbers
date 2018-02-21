@@ -1,4 +1,6 @@
 #!/usr/bin/env Rscript
 library(devtools)
-document("mountainclimbers")
-install("mountainclimbers")
+# Document and install the local package.
+# Library names are independent of directory names.
+document("data")
+install("data")
