@@ -1,11 +1,11 @@
-# ---- mountain-climbers-setup
+# ---- peaks-setup
 library(tidyverse)
 library(plotly)
 library(magrittr)
 library(gridExtra)
 
 library(totems)
-library(mountainclimbers)
+library(peaks)
 library(crotchet)
 
 library(RColorBrewer)

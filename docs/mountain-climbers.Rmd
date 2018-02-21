@@ -33,7 +33,7 @@ chunks_dir <- "R"
 sapply(list.files(chunks_dir, "*.R", full.names = TRUE), read_chunk)
 ```
 
-```{r mountain-climbers-setup, include=FALSE}
+```{r peaks-setup, include=FALSE}
 ```
 
 ```{r 04-team-structures, fig.width=2}
@@ -198,9 +198,7 @@ ggplot(search_areas_by_strategy) +
   base_theme
 ```
 
-# Experiment 1: Random walks
-
-## Identical teammates
+# Identical teammates
 
 ```{r, fig.keep="last"}
 data("identical_team")
@@ -270,7 +268,7 @@ random_walk_plot <- ggplot(identical_team %>% filter(exp_id == 1)) +
 random_walk_plot
 ```
 
-## Differing skills
+# Differing skills
 
 ```{r, fig.width=10, fig.keep="last"}
 data("differing_skills")
@@ -321,7 +319,7 @@ grid.arrange(gg_differing_skills_timeline,
   facet_grid(strategy ~ team_label_rev)
 ```
 
-## Solo teams
+# Solo teams
 
 ```{r, fig.keep="last", fig.width=10}
 data("solo_teams")
@@ -350,7 +348,7 @@ max_fitness <- solo_teams %>%
 grid.arrange(gg_solo_teams_timeline, gg_solo_teams_final_fitness, nrow = 1)
 ```
 
-## Number of exchanges
+# Number of exchanges
 
 ```{r}
 data("alternating")
@@ -393,7 +391,7 @@ ggplot(aggregate_fns) +
   base_theme
 ```
 
-## Variable feedback
+# Variable feedback
 
 ```{r, fig.width = fig_width * 2}
 data("variable_feedback")
