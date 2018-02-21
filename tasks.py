@@ -49,7 +49,7 @@ def run(ctx, experiment):
 
 @task
 def install(ctx, verbose=False, use_data_too=False):
-    """Install the mountainclimbers R package."""
+    """Install the peaks R package."""
     if use_data_too:
         use_data(ctx, verbose=verbose)
 
@@ -57,7 +57,7 @@ def install(ctx, verbose=False, use_data_too=False):
 
 @task
 def use_data(ctx, verbose=False):
-    """Save the simulation results to the mountainclimbers R package."""
+    """Save the simulation results to the peaks R package."""
     cmd = 'cd {R_pkg} && Rscript data-raw/use-data.R'
     ctx.run(cmd.format(R_pkg=R_PKG), echo=verbose)
 
