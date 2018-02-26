@@ -10,7 +10,7 @@ output:
 
 Humans have the unique ability to use and improve cultural products that were invented by someone else. This allows human culture to accumulate over generations of continued refinement. The result of this accumulation is that individuals are able to use cultural products that are so complex as to be impossible for any individual to invent on their own. In looking for evidence of cumulative cultural evolution in non-human species, a key requirement is that the tools or other cultural products sustained in a community could not have been invented by individuals working alone. However, what are the conditions under which generations of problem solvers working one after the other can arrive at solutions that could not be reached by individuals working alone or in parallel? Under what conditions does inheritance in problem solving provide an advantage over alternative ways of allocating the same number of labor hours? In this research, I use computational models to explore the conditions under which inheritance results in generations of problem solvers achieving problem solutions that were unlikely to be obtained by individuals working alone, even for the same total amount of time.
 
-```{r config, include=FALSE}
+```{r peaks-config, include=FALSE}
 library(knitr)
 library(crotchet)
 
@@ -41,7 +41,7 @@ draw_graphviz("team-structures", package = "totems")
 ```
 
 ```{r guessing-strategies, fig.width=5}
-draw_graphviz("guessing-strategies", package = "mountainclimbers")
+draw_graphviz("guessing-strategies", package = "peaks")
 ```
 
 # Methods
