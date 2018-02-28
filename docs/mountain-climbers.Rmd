@@ -24,18 +24,16 @@ opts_chunk$set(
   message = FALSE,
   warning = FALSE,
   results = "hide",
-  fig.path = "figs/",
   fig.width = fig_width,
   fig.height = fig_height,
-  cache = TRUE,
-  cache.path = "mountain-climbers-cache/"
+  cache = TRUE
 )
 
 chunks_dir <- "R"
 sapply(list.files(chunks_dir, "*.R", full.names = TRUE), read_chunk)
 ```
 
-```{r peaks-setup, include=FALSE, cache=FALSE}
+```{r peaks-setup}
 ```
 
 ```{r 04-team-structures, fig.width=2}
