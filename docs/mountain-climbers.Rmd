@@ -35,7 +35,7 @@ chunks_dir <- "R"
 sapply(list.files(chunks_dir, "*.R", full.names = TRUE), read_chunk)
 ```
 
-```{r peaks-setup, include=FALSE}
+```{r peaks-setup, include=FALSE, cache=FALSE}
 ```
 
 ```{r 04-team-structures, fig.width=2}
@@ -59,7 +59,7 @@ lattice::wireframe(z ~ x * y, data = z)
 
 ## Ability as vision {-}
 
-```{r, fig.width=6, fig.height=6}
+```{r ability-as-vision, fig.width=6, fig.height=6}
 ability <- data_frame(vision = 1:9)
 
 gg_single_dimension <- ggplot(ability) +
@@ -132,7 +132,7 @@ grid.arrange(
 
 ## Vision and search areas {-}
 
-```{r, fig.width=8, fig.height=2}
+```{r vision-and-search-areas, fig.width=8, fig.height=2}
 # Vision of 1 gives a visible range of 3 (from -1 to 1)
 visible_range <- function(vision) vision * 2 + 1
 
@@ -181,7 +181,7 @@ gg_search_areas <- ggplot() +
 (gg_search_rects <- (gg_search_areas %+% filter(search_areas_by_strategy, strategy == "diachronic")))
 ```
 
-```{r}
+```{r search-areas-by-strategy}
 search_areas_by_strategy %<>%
   arrange(vision_y) %>%
   mutate(
@@ -204,7 +204,7 @@ ggplot(search_areas_by_strategy) +
 
 ## Identical teammates {-}
 
-```{r, fig.keep="last"}
+```{r identical-teammates, fig.keep="last"}
 data("identical_team")
 
 identical_team %<>%
@@ -248,7 +248,7 @@ grid.arrange(gg_identical_team_timeline,
              gg_identical_team_final_fitness, nrow = 1)
 ```
 
-```{r}
+```{r random-walk-plot}
 set.seed(782)
 sample_sim_ids <- identical_team %>%
   filter(exp_id == 1) %>%
@@ -274,7 +274,7 @@ random_walk_plot
 
 ## Differing skills {-}
 
-```{r, fig.width=10, fig.keep="last"}
+```{r differing-skills, fig.width=10, fig.keep="last"}
 data("differing_skills")
 
 differing_skills %<>%
@@ -318,14 +318,14 @@ grid.arrange(gg_differing_skills_timeline,
              nrow = 1)
 ```
 
-```{r, fig.width = 8, fig.height = 5}
+```{r differing-skills-walk, fig.width = 8, fig.height = 5}
 (random_walk_plot %+% filter(differing_skills, exp_id == 1)) +
   facet_grid(strategy ~ team_label_rev)
 ```
 
 ## Solo teams {-}
 
-```{r, fig.keep="last", fig.width=10}
+```{r solo-teams, fig.keep="last", fig.width=10}
 data("solo_teams")
 
 solo_teams %<>%
@@ -354,7 +354,7 @@ grid.arrange(gg_solo_teams_timeline, gg_solo_teams_final_fitness, nrow = 1)
 
 ## Number of exchanges {-}
 
-```{r}
+```{r number-of-exchanges}
 data("alternating")
 
 exchange_rate_strategies <- c("diachronic", "diachronic_2", "diachronic_3", "diachronic_4", "diachronic_max")
@@ -380,7 +380,7 @@ ggplot(alternating) +
 
 ## Aggregate functions {-}
 
-```{r}
+```{r aggregate-functions}
 data("aggregate_fns")
 
 aggregate_fns %<>%
@@ -397,7 +397,7 @@ ggplot(aggregate_fns) +
 
 ## Variable feedback {-}
 
-```{r, fig.width = fig_width * 2}
+```{r variable-feedback, fig.width = fig_width * 2}
 data("variable_feedback")
 
 variable_feedback %<>%
