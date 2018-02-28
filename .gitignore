@@ -9,5 +9,5 @@ figs/
 *.csv
 
 # These are easy to reproduce
-mountainclimbers/data/*.rda
-mountainclimbers/data-raw/*.csv
+data/data/*.rda
+data/data-raw/*.csv
