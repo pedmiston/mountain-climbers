@@ -1,63 +1,78 @@
----
-title: "Mountain climbers: Teams of hill-climbing problem solvers"
-author: "Pierce Edmiston"
-output:
-  html_document:
-    theme: flatly
-    toc: true
-    toc_depth: 1
----
+# ---- peaks-setup
+library(tidyverse)
+library(plotly)
+library(magrittr)
+library(gridExtra)
 
-# Introduction {-}
-
-Humans have the unique ability to use and improve cultural products that were invented by someone else. This allows human culture to accumulate over generations of continued refinement. The result of this accumulation is that individuals are able to use cultural products that are so complex as to be impossible for any individual to invent on their own. In looking for evidence of cumulative cultural evolution in non-human species, a key requirement is that the tools or other cultural products sustained in a community could not have been invented by individuals working alone. However, what are the conditions under which generations of problem solvers working one after the other can arrive at solutions that could not be reached by individuals working alone or in parallel? Under what conditions does inheritance in problem solving provide an advantage over alternative ways of allocating the same number of labor hours? In this research, I use computational models to explore the conditions under which inheritance results in generations of problem solvers achieving problem solutions that were unlikely to be obtained by individuals working alone, even for the same total amount of time.
-
-```{r peaks-config, include=FALSE}
-library(knitr)
+library(totems)
+library(peaks)
 library(crotchet)
 
-fig_width <- 6
-fig_height <- 4
+library(RColorBrewer)
+base_theme <- theme_minimal()
 
-opts_chunk$set(
-  echo = FALSE,
-  message = FALSE,
-  warning = FALSE,
-  results = "hide",
-  fig.width = fig_width,
-  fig.height = fig_height,
-  cache = TRUE
+theme_colors <- brewer.pal(4, "Set2")
+names(theme_colors) <- c("green", "orange", "blue", "pink")
+get_theme_color_values <- function(names) theme_colors[names] %>% unname()
+
+scale_color_strategy <- scale_color_manual(
+  "strategy",
+  labels = c("diachronic", "synchronic"),
+  values = get_theme_color_values(c("blue", "green"))
+)
+scale_fill_strategy <- scale_fill_manual(
+  "strategy",
+  labels = c("diachronic", "synchronic"),
+  values = get_theme_color_values(c("blue", "green"))
 )
 
-chunks_dir <- "R"
-sapply(list.files(chunks_dir, "*.R", full.names = TRUE), read_chunk)
-```
+scale_color_team_label <- scale_color_manual(
+  "skill overlap",
+  labels = c("4 disjoint", "3", "2 overlapping", "1", "0 identical"),
+  values = brewer.pal(7, "BuGn")[7:3]
+)
+scale_alpha_team <- scale_alpha_discrete(
+  "skill overlap",
+  labels = c("4 disjoint", "3", "2 overlapping", "1", "0 identical"),
+  range = c(1.0, 0.3)
+)
 
-```{r peaks-setup}
-```
+scale_y_fitness_pct <- scale_y_continuous("fitness", labels = scales::percent)
+scale_x_strategy_rev <- scale_x_discrete("strategy", labels = c("synchronic", "diachronic"))
 
-```{r 04-team-structures, fig.width=2}
-draw_graphviz("team-structures", package = "totems")
-```
 
-```{r guessing-strategies, fig.width=5}
-draw_graphviz("guessing-strategies", package = "peaks")
-```
+# Vision of 1 gives a visible range of 3 (from -1 to 1)
+visible_range <- function(vision) -vision:vision
 
-# Methods {-}
+# Vision in two dimensions is a search area
+calculate_player_search_area <- function(vision_x, vision_y) {
+  expand.grid(x = visible_range(vision_x),
+              y = visible_range(vision_y)) %>%
+    mutate(vision_x = vision_x, vision_y = vision_y) %>%
+    select(vision_x, vision_y, x, y)
+}
 
-## Landscapes {-}
+calculate_team_search_area <- function(p1_vision_x, p1_vision_y,
+                                       p2_vision_x, p2_vision_y) {
+  expand.grid(
+    p1_x = visible_range(p1_vision_x),
+    p1_y = visible_range(p1_vision_y),
+    p2_x = visible_range(p2_vision_x),
+    p2_y = visible_range(p2_vision_y)
+  ) %>% mutate(
+    p1_vision_x = p1_vision_x,
+    p1_vision_y = p1_vision_y,
+    p2_vision_x = p2_vision_x,
+    p2_vision_y = p2_vision_y,
+    x = p1_x + p2_x,
+    y = p1_y + p2_y
+  ) %>%
+    select(p1_vision_x, p1_vision_y, p2_vision_x, p2_vision_y, x, y)
+}
 
-```{r simple-hill}
-limits <- seq(-100, 100, by = 10)
-z <- expand.grid(x = limits, y = limits) %>%
-     mutate(z = -x^2 - y^2)
-lattice::wireframe(z ~ x * y, data = z)
-```
+# ---- peaks-methods ----
 
-## Ability as vision {-}
-
-```{r ability-as-vision, fig.width=6, fig.height=6}
+# * ability-as-vision ----
 ability <- data_frame(vision = 1:9)
 
 gg_single_dimension <- ggplot(ability) +
@@ -76,7 +91,6 @@ gg_single_dimension <- ggplot(ability) +
 
 
 data("differing_skills")
-
 teams <- differing_skills %>%
   get_team_info() %>%
   gather(dimension, value, -c(team, player, team_id)) %>%
@@ -121,16 +135,8 @@ gg_two_dimensions <- (tradeoffs_plot %+% filter(teams, player == 1)) +
 gg_differing_skills <- (tradeoffs_plot %+% teams) +
   labs(title = "Two person teams varying in vision distribution")
 
-grid.arrange(
-  arrangeGrob(gg_single_dimension, gg_two_dimensions, nrow = 1),
-  gg_differing_skills,
-  ncol = 1
-)
-```
+# * search-areas ----
 
-## Vision and search areas {-}
-
-```{r vision-and-search-areas, fig.width=8, fig.height=2}
 # Vision of 1 gives a visible range of 3 (from -1 to 1)
 visible_range <- function(vision) vision * 2 + 1
 
@@ -176,10 +182,9 @@ gg_search_areas <- ggplot() +
   base_theme +
   theme(strip.text = element_blank())
 
-(gg_search_rects <- (gg_search_areas %+% filter(search_areas_by_strategy, strategy == "diachronic")))
-```
+gg_search_rects <- (gg_search_areas %+% filter(search_areas_by_strategy, strategy == "diachronic"))
 
-```{r search-areas-by-strategy}
+# * search-areas-by-strategy ----
 search_areas_by_strategy %<>%
   arrange(vision_y) %>%
   mutate(
@@ -187,7 +192,7 @@ search_areas_by_strategy %<>%
     visions_f = factor(visions, levels = visions)
   )
 
-ggplot(search_areas_by_strategy) +
+gg_search_areas_by_strategy <- ggplot(search_areas_by_strategy) +
   aes(visions_f, search_area, fill = visions_f) +
   geom_bar(stat = "identity") +
   annotate("text", x = 6, y = 10, label = "all synchronic teams",
@@ -196,13 +201,10 @@ ggplot(search_areas_by_strategy) +
   scale_y_continuous("search area") +
   scale_fill_brewer(palette = "Set2", guide = "none") +
   base_theme
-```
 
-# Experiments {-}
+# ---- peaks-experiments ----
 
-## Identical teammates {-}
-
-```{r identical-teammates, fig.keep="last"}
+# * identical-teammates ----
 data("identical_team")
 
 identical_team %<>%
@@ -242,11 +244,7 @@ max_fitness <- identical_team %>%
   theme(legend.position = "none",
         panel.grid.major.x = element_blank()))
 
-grid.arrange(gg_identical_team_timeline,
-             gg_identical_team_final_fitness, nrow = 1)
-```
-
-```{r random-walk-plot}
+# * random-walk-plot ----
 set.seed(782)
 sample_sim_ids <- identical_team %>%
   filter(exp_id == 1) %>%
@@ -267,12 +265,7 @@ random_walk_plot <- ggplot(identical_team %>% filter(exp_id == 1)) +
   base_theme +
   theme(legend.position = "none")
 
-random_walk_plot
-```
-
-## Differing skills {-}
-
-```{r differing-skills, fig.width=10, fig.keep="last"}
+ # * differing-skills ----
 data("differing_skills")
 
 differing_skills %<>%
@@ -280,7 +273,7 @@ differing_skills %<>%
   recode_team() %>%
   extract_position()
 
-(gg_differing_skills_timeline <- ggplot(differing_skills) +
+gg_differing_skills_timeline <- ggplot(differing_skills) +
   aes(time, fitness_pct, alpha = team_label, color = strategy) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
@@ -289,7 +282,7 @@ differing_skills %<>%
   scale_alpha_team +
   guides(color = guide_legend(order = 1),
          alpha = guide_legend(order = 2)) +
-  base_theme)
+  base_theme
 
 max_fitness <- differing_skills %>%
   group_by(sim_id, strategy, team_label) %>%
@@ -299,7 +292,8 @@ max_fitness <- differing_skills %>%
 dodge_width <- 0.9
 team_dodge <- position_dodge(width = dodge_width)
 sim_dodge <- position_jitterdodge(dodge.width = dodge_width, jitter.width = 0.4)
-(gg_differing_skills_final_fitness <- ggplot(max_fitness) +
+
+gg_differing_skills_final_fitness <- ggplot(max_fitness) +
     aes(x = strategy, fitness_pct, alpha = team_label) +
     scale_y_fitness_pct +
     # geom_point(aes(color = strategy), position = sim_dodge) +
@@ -309,50 +303,12 @@ sim_dodge <- position_jitterdodge(dodge.width = dodge_width, jitter.width = 0.4)
     scale_fill_strategy +
     guides(fill = "none") +
     base_theme +
-    theme(panel.grid.major.x = element_blank()))
+    theme(panel.grid.major.x = element_blank())
 
-grid.arrange(gg_differing_skills_timeline,
-             gg_differing_skills_final_fitness,
-             nrow = 1)
-```
-
-```{r differing-skills-walk, fig.width = 8, fig.height = 5}
-(random_walk_plot %+% filter(differing_skills, exp_id == 1)) +
+gg_differing_skills_walk <- (random_walk_plot %+% filter(differing_skills, exp_id == 1)) +
   facet_grid(strategy ~ team_label_rev)
-```
 
-## Solo teams {-}
-
-```{r solo-teams, fig.keep="last", fig.width=10}
-data("solo_teams")
-
-solo_teams %<>%
-  recode_fitness_as_pct() %>%
-  recode_team()
-
-(gg_solo_teams_timeline <- ggplot(solo_teams) +
-    aes(time, fitness_pct, alpha = team_label, color = strategy) +
-    geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
-    scale_x_continuous("calendar hours") +
-    scale_y_continuous("fitness", labels = scales::percent) +
-    scale_color_manual("strategy", values = get_theme_color_values(c("blue", "green"))) +
-    scale_alpha_team +
-    guides(color = guide_legend(order = 1),
-           alpha = guide_legend(order = 2)) +
-    base_theme)
-
-max_fitness <- solo_teams %>%
-  group_by(sim_id, strategy, team_label) %>%
-  summarize(fitness_pct = max(fitness_pct))
-
-(gg_solo_teams_final_fitness <- (gg_differing_skills_final_fitness %+% max_fitness))
-
-grid.arrange(gg_solo_teams_timeline, gg_solo_teams_final_fitness, nrow = 1)
-```
-
-## Number of exchanges {-}
-
-```{r number-of-exchanges}
+# * number-of-exchanges ----
 data("alternating")
 
 exchange_rate_strategies <- c("diachronic", "diachronic_2", "diachronic_3", "diachronic_4", "diachronic_max")
@@ -367,35 +323,29 @@ alternating %<>%
   recode_fitness_as_pct() %>%
   left_join(exchange_rate_map)
 
-ggplot(alternating) +
-  aes(time, fitness_pct, color = exchange_rate) +
-  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
-  scale_x_continuous("calendar hours") +
-  scale_y_continuous("fitness", labels = scales::percent) +
-  scale_color_brewer("exchanges", palette = "Set2", guide = guide_legend(reverse = TRUE)) +
-  base_theme
-```
-
-## Aggregate functions {-}
-
-```{r aggregate-functions}
+# * aggregate ----
 data("aggregate_fns")
 
 aggregate_fns %<>%
   recode_fitness_as_pct()
 
-ggplot(aggregate_fns) +
+gg_aggregate <- ggplot(aggregate_fns) +
   aes(time, fitness_pct, color = aggregate_fn) +
   geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
   scale_x_continuous("calendar hours") +
   scale_y_continuous("fitness", labels = scales::percent) +
   scale_color_brewer("aggregate function", palette = "Set2") +
   base_theme
-```
 
-## Variable feedback {-}
+gg_alternating <- ggplot(alternating) +
+  aes(time, fitness_pct, color = exchange_rate) +
+  geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+  scale_x_continuous("calendar hours") +
+  scale_y_continuous("fitness", labels = scales::percent) +
+  scale_color_brewer("exchanges", palette = "Set2", guide = guide_legend(reverse = TRUE)) +
+  base_theme
 
-```{r variable-feedback, fig.width = fig_width * 2}
+# * variable-feedback ----
 data("variable_feedback")
 
 variable_feedback %<>%
@@ -423,8 +373,3 @@ variable_feedback_plot <- ggplot(variable_feedback) +
     alpha = guide_legend(order = 2, reverse = TRUE)
   ) +
   base_theme
-
-grid.arrange(feedback_trials_plot, variable_feedback_plot, nrow = 1)
-```
-
-# Discussion
