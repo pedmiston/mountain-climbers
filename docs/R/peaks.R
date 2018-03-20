@@ -308,6 +308,30 @@ gg_differing_skills_final_fitness <- ggplot(max_fitness) +
 gg_differing_skills_walk <- (random_walk_plot %+% filter(differing_skills, exp_id == 1)) +
   facet_grid(strategy ~ team_label_rev)
 
+# * solo-teams ----
+data("solo_teams")
+
+solo_teams %<>%
+  recode_fitness_as_pct() %>%
+  recode_team()
+
+gg_solo_teams_timeline <- ggplot(solo_teams) +
+    aes(time, fitness_pct, alpha = team_label, color = strategy) +
+    geom_line(stat = "summary", fun.y = "mean", size = 1.2) +
+    scale_x_continuous("calendar hours") +
+    scale_y_continuous("fitness", labels = scales::percent) +
+    scale_color_manual("strategy", values = get_theme_color_values(c("blue", "green"))) +
+    scale_alpha_team +
+    guides(color = guide_legend(order = 1),
+           alpha = guide_legend(order = 2)) +
+    base_theme
+
+max_fitness <- solo_teams %>%
+  group_by(sim_id, strategy, team_label) %>%
+  summarize(fitness_pct = max(fitness_pct))
+
+gg_solo_teams_final_fitness <- (gg_differing_skills_final_fitness %+% max_fitness)
+
 # * number-of-exchanges ----
 data("alternating")
 
