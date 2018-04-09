@@ -1,0 +1,9 @@
+name: peaks
+root: ~/PhD/peaks
+tmux_options: -2
+windows:
+  - main:
+      layout: even-horizontal
+      panes:
+          -
+          -
