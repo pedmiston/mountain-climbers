@@ -25,7 +25,7 @@ teams:
 ---
 starting_pos:
   radius: 180
-  size: 100
+  degrees: [45, 135, 225, 315]
   seed: 2
 n_seeds: 10
 

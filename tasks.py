@@ -10,6 +10,7 @@ import peaks
 
 PROJ = Path(__file__).parent.absolute()
 R_PKG = Path(PROJ, 'data')
+EXPERIMENTS = Path(PROJ, 'experiments')
 
 
 @task(help=dict(experiment='yaml file by path or stem name with no extension'))
@@ -48,18 +49,20 @@ def run(ctx, experiment):
 
 
 @task
-def install(ctx, verbose=False, use_data_too=False):
+def install(ctx, use_data_too=False, purge_data=False):
     """Install the peaks R package."""
     if use_data_too:
-        use_data(ctx, verbose=verbose)
+        use_data(ctx, purge_data=purge_data)
 
-    ctx.run('./install.R', echo=verbose)
+    ctx.run('./install.R', echo=True)
 
 @task
-def use_data(ctx, verbose=False):
+def use_data(ctx, purge_data=False):
     """Save the simulation results to the peaks R package."""
+    if purge_data:
+        ctx.run('cd {R_pkg} && rm -f data/*.rda'.format(R_pkg=R_PKG), echo=True)
     cmd = 'cd {R_pkg} && Rscript data-raw/use-data.R'
-    ctx.run(cmd.format(R_pkg=R_PKG), echo=verbose)
+    ctx.run(cmd.format(R_pkg=R_PKG), echo=True)
 
 
 @task(help={'clear-cache': 'Clear knitr cache and figs before rendering.',

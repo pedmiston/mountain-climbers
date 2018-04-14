@@ -1,29 +1,35 @@
 ---
+type: default
 landscapes: SimpleHill
 strategies:
   - diachronic
-  - synchronic
-starting_pos:
-  radius: 1000
-  degrees: 225
-n_seeds: 100
 labor_hours: 100
-omniscient:
-  - false
-  - true
 teams:
   a:
     - { vision_x: 5, vision_y: 5 }
     - { vision_x: 5, vision_y: 5 }
   b:
     - { vision_x: 4, vision_y: 6 }
-    - { vision_x: 6, vision_y: 4 }
+    - { vision_x: 4, vision_y: 6 }
   c:
     - { vision_x: 3, vision_y: 7 }
-    - { vision_x: 7, vision_y: 3 }
+    - { vision_x: 3, vision_y: 7 }
   d:
     - { vision_x: 2, vision_y: 8 }
-    - { vision_x: 8, vision_y: 2 }
+    - { vision_x: 2, vision_y: 8 }
   e:
     - { vision_x: 1, vision_y: 9 }
-    - { vision_x: 9, vision_y: 1 }
+    - { vision_x: 1, vision_y: 9 } 
+
+---
+starting_pos:
+  radius: 180
+  degrees: [45, 135, 225, 315]
+  seed: 2
+n_seeds: 100
+
+---
+starting_pos:
+  radius: 180
+  degrees: 225
+n_seeds: 100

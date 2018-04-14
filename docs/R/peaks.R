@@ -73,23 +73,6 @@ calculate_team_search_area <- function(p1_vision_x, p1_vision_y,
 # ---- peaks-methods ----
 
 # * ability-as-vision ----
-ability <- data_frame(vision = 1:9)
-
-gg_single_dimension <- ggplot(ability) +
-  aes(vision, vision) +
-  geom_bar(aes(alpha = vision), stat = "identity", fill = theme_colors[["blue"]]) +
-  scale_x_continuous("", breaks = NULL) +
-  scale_y_continuous("vision", breaks = 1:9) +
-  scale_alpha_continuous(range = c(0.5, 1.0)) +
-  guides(alpha = "none") +
-  coord_cartesian(xlim = c(1, 9.2), ylim = c(0, 9.6)) +
-  base_theme +
-  theme(
-    panel.grid.minor.y = element_blank()
-  ) +
-  ggtitle("Vision in a single dimension")
-
-
 data("differing_skills")
 teams <- differing_skills %>%
   get_team_info() %>%
