@@ -1,7 +1,6 @@
-invoke==0.14.0
-ipython==5.1.0
-numpy==1.11.2
-pandas==0.19.1
-pytest==3.0.5
-PyYAML==3.12
-Unipath==1.1
+invoke
+ipython
+numpy
+pandas
+pytest
+PyYAML
