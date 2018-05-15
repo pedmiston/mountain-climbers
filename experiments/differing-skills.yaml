@@ -3,7 +3,6 @@ type: default
 landscapes: SimpleHill
 strategies:
   - diachronic
-  - synchronic
 labor_hours: 100
 teams:
   a:
@@ -24,13 +23,13 @@ teams:
 
 ---
 starting_pos:
-  radius: 180
-  degrees: [45, 135, 225, 315]
-  seed: 2
+  radius: 200
+  size: 50
+  seed: 4
 n_seeds: 10
 
 ---
 starting_pos:
-  radius: 180
+  radius: 200
   degrees: 225
 n_seeds: 100
